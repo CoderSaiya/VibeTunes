@@ -10,4 +10,16 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Entities\Interfaces\" />
+      <Folder Include="Entities\Objects\" />
+      <Folder Include="Entities\ValueOfObject\" />
+      <Folder Include="FrameworkAndDrivers\Configuration\" />
+      <Folder Include="FrameworkAndDrivers\Persistence\" />
+      <Folder Include="InterfaceAdapters\Controllers\" />
+      <Folder Include="InterfaceAdapters\DTOs\" />
+      <Folder Include="InterfaceAdapters\Mappers\" />
+      <Folder Include="UseCases\" />
+    </ItemGroup>
+
 </Project>
