@@ -1,6 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BE", "BE\BE.csproj", "{9FABD968-5D9C-4C14-849B-6BC5153FD085}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VibeTunes.API", "VibeTunes.API\VibeTunes.API.csproj", "{9FABD968-5D9C-4C14-849B-6BC5153FD085}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VibeTunes.Application", "VibeTunes.Application\VibeTunes.Application.csproj", "{B56D7628-AB53-4491-8EAF-863C9DC58F99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VibeTunes.Domain", "VibeTunes.Domain\VibeTunes.Domain.csproj", "{B2E7DBDC-6EBF-45CD-8328-051CCC751D83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VibeTunes.Infrastructure", "VibeTunes.Infrastructure\VibeTunes.Infrastructure.csproj", "{891F1658-69B4-47C6-B0F9-EEF810DF1B62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VibeTunes.Presentation", "VibeTunes.Presentation\VibeTunes.Presentation.csproj", "{3B25F7E2-12C5-4603-91C6-552B0A1B3795}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +20,21 @@ Global
 		{9FABD968-5D9C-4C14-849B-6BC5153FD085}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FABD968-5D9C-4C14-849B-6BC5153FD085}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FABD968-5D9C-4C14-849B-6BC5153FD085}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B56D7628-AB53-4491-8EAF-863C9DC58F99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B56D7628-AB53-4491-8EAF-863C9DC58F99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B56D7628-AB53-4491-8EAF-863C9DC58F99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B56D7628-AB53-4491-8EAF-863C9DC58F99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2E7DBDC-6EBF-45CD-8328-051CCC751D83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2E7DBDC-6EBF-45CD-8328-051CCC751D83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2E7DBDC-6EBF-45CD-8328-051CCC751D83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2E7DBDC-6EBF-45CD-8328-051CCC751D83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{891F1658-69B4-47C6-B0F9-EEF810DF1B62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{891F1658-69B4-47C6-B0F9-EEF810DF1B62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{891F1658-69B4-47C6-B0F9-EEF810DF1B62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{891F1658-69B4-47C6-B0F9-EEF810DF1B62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B25F7E2-12C5-4603-91C6-552B0A1B3795}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B25F7E2-12C5-4603-91C6-552B0A1B3795}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B25F7E2-12C5-4603-91C6-552B0A1B3795}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B25F7E2-12C5-4603-91C6-552B0A1B3795}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
