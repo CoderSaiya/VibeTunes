@@ -7,4 +7,11 @@
         <RootNamespace>BE</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\VibeTunes.Application\VibeTunes.Application.csproj" />
+      <ProjectReference Include="..\VibeTunes.Domain\VibeTunes.Domain.csproj" />
+      <ProjectReference Include="..\VibeTunes.Infrastructure\VibeTunes.Infrastructure.csproj" />
+      <ProjectReference Include="..\VibeTunes.Presentation\VibeTunes.Presentation.csproj" />
+    </ItemGroup>
+
 </Project>
