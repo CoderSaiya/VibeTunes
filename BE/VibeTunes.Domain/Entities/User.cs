@@ -11,7 +11,7 @@ public class User : BaseEntity
     public bool IsActive { get; set; } = false;
     public string ActiveCode {get; set;} = string.Empty!;
     
-    private User() {}
+    protected User() {}
 
     public User(string username, string password, Email emailAddress)
     {
