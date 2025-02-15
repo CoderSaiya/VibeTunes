@@ -14,10 +14,6 @@ public sealed class Song : BaseEntity
     [ForeignKey("AlbumId")]
     public Album? Album { get; set; } = null!;
 
-    public Guid? PlaylistId { get; set; }
-    [ForeignKey("PlaylistId")]
-    public Album? Playlist { get; set; } = null!;
-
     public string Title { get; set; }
     public int Duration { get; set; }
     public string FileUrl { get; set; }
@@ -26,4 +22,5 @@ public sealed class Song : BaseEntity
     public SongStatus Status { get; set; } = SongStatus.Pending;
 
     public ICollection<Genre> Genres { get; set; } = new List<Genre>();
+    public ICollection<Playlist> Playlists { get; set; } = new List<Playlist>();
 }
