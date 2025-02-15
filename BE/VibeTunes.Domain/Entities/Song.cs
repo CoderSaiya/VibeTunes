@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using VibeTunes.Domain.Common;
+using VibeTunes.Domain.ValueObjects;
 
 namespace VibeTunes.Domain.Entities;
 
@@ -18,6 +19,7 @@ public sealed class Song : BaseEntity
     public string FileUrl { get; set; }
     public string CoverImgUrl { get; set; }
     public int Streams { get; set; }
+    public SongStatus Status { get; set; } = SongStatus.Pending;
 
     public ICollection<Genre> Genres { get; set; } = new List<Genre>();
 }
