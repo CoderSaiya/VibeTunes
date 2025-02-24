@@ -15,10 +15,11 @@ public sealed class Song : BaseEntity
     public Album? Album { get; set; } = null!;
 
     public string Title { get; set; }
-    public int Duration { get; set; }
+    public TimeSpan Duration { get; set; }
     public string FileUrl { get; set; }
     public string CoverImgUrl { get; set; }
     public int Streams { get; set; }
+    public DateTime ReleaseDate { get; set; }
     public SongStatus Status { get; set; } = SongStatus.Pending;
 
     public ICollection<Genre> Genres { get; set; } = new List<Genre>();
