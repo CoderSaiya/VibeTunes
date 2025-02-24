@@ -21,6 +21,24 @@ public class RefreshRepository : IRefreshRepository
             .FirstOrDefaultAsync();
     }
 
+    public async Task<RefreshToken?> GetValidTokenByUserAsync(Guid userId)
+    {
+        return await _context.RefreshTokens
+            .Where(t => t.UserId == userId &&
+                        t.IsRevoked == false &&
+                        t.ExpiryDate > DateTime.UtcNow)
+            .OrderByDescending(t => t.ExpiryDate)
+            .FirstOrDefaultAsync();
+    }
+    
+    public async Task<bool> HasValidTokenAsync(Guid userId)
+    {
+        return await _context.RefreshTokens
+            .AnyAsync(t => t.UserId == userId && 
+                           t.IsRevoked == false && 
+                           t.ExpiryDate > DateTime.UtcNow);
+    }
+
     public async Task AddAsync(RefreshToken refreshToken)
     {
         await _context.RefreshTokens.AddAsync(refreshToken);
