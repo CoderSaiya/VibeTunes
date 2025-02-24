@@ -4,7 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VibeTunes.Infrastructure.Persistence.Data;
 using MediatR;
+using VibeTunes.Application.Interfaces;
 using VibeTunes.Domain.Interfaces;
+using VibeTunes.Infrastructure.Identity;
 using VibeTunes.Infrastructure.Persistence.Repositories;
 
 namespace VibeTunes.Infrastructure.Configuration;
@@ -28,6 +30,16 @@ public static class DependencyInjection
             optionsLifetime: ServiceLifetime.Singleton);
         
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IAlbumRepository, AlbumRepository>();
+        services.AddScoped<IGenreRepository, GenreRepository>();
+        services.AddScoped<IHistoryRepository, HistoryRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IPlaylistRepository, PlaylistRepository>();
+        services.AddScoped<IProfileRepository, ProfileRepository>();
+        services.AddScoped<IRefreshRepository, RefreshRepository>();
+        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         return services;
