@@ -11,6 +11,6 @@ public sealed class RefreshToken : BaseEntity
     
     public string Token { get; init; }
     public DateTime ExpiryDate  { get; set; }
-    public bool? IsUsed { get; set; } = false;
-    public bool? IsRevoked { get; set; } = false;
+    public bool IsUsed { get; set; } = false;
+    public bool IsRevoked { get; set; } = false;
 }
