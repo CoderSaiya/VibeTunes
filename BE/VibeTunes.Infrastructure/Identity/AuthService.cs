@@ -4,14 +4,19 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using VibeTunes.Application.DTOs;
 using VibeTunes.Application.Interfaces;
-using VibeTunes.Domain.Entities;
+using VibeTunes.Domain.Interfaces;
+using VibeTunes.Infrastructure.Persistence.Repositories;
 
 namespace VibeTunes.Infrastructure.Identity;
 
-public class AuthService(IConfiguration configuration) : IAuthService
+public class AuthService(
+    IConfiguration configuration, 
+    RefreshRepository tokenRepository,
+    IUnitOfWork unitOfWork
+    ) : IAuthService
 {
-
     public string HashPassword(string password)
     {
         using var sha256 = SHA256.Create();
@@ -47,5 +52,28 @@ public class AuthService(IConfiguration configuration) : IAuthService
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
         }
+    }
+
+    public async Task<string?> RefreshTokenAsync(string refreshToken)
+    {
+        var existingToken = await tokenRepository.GetByTokenAsync(refreshToken);
+        if (existingToken is null || existingToken.ExpiryDate < DateTime.Now || existingToken.IsRevoked)
+            return null;
+        
+        existingToken.IsUsed = true;
+        
+        var user = existingToken.User;
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Role, user.GetType().ToString())
+        };
+        
+        var newAccessToken = GenerateAccessToken(claims);
+        
+        await unitOfWork.CommitAsync();
+        
+        return newAccessToken;
     }
 }
