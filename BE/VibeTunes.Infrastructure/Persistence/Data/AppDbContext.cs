@@ -58,6 +58,43 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
                     j.HasKey("SongId", "GenreId");
                     j.ToTable("SongGenres");
                 });
+
+        modelBuilder.Entity<Profile>(profiles =>
+        {
+            profiles.OwnsOne(p => p.Address, a =>
+            {
+                a.Property(x => x.Street).HasColumnType("Street");
+                a.Property(x => x.District).HasColumnType("District");
+                a.Property(x => x.City).HasColumnType("City");
+                a.Property(x => x.Country).HasColumnType("Country");
+            });
+            
+            profiles.OwnsOne(p => p.Name, n =>
+            {
+                n.Property(x => x.FirstName).HasColumnType("FirstName");
+                n.Property(x => x.LastName).HasColumnType("LastName");
+            });
+        });
+
+        modelBuilder.Entity<User>(users =>
+        {
+            users.OwnsOne(u => u.EmailAddress, e =>
+            {
+                e.Property(x => x.Value).HasColumnType("Email");
+            });
+        });
+        
+        modelBuilder.Entity<Notification>()
+            .HasOne(c => c.Sender)
+            .WithMany(u => u.NotificationsSent)
+            .HasForeignKey(c => c.SenderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(c => c.Receiver)
+            .WithMany(u => u.NotificationsReceived)
+            .HasForeignKey(c => c.ReceiverId)
+            .OnDelete(DeleteBehavior.Restrict);
         
         base.OnModelCreating(modelBuilder);
     }

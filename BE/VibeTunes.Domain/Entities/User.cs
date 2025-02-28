@@ -18,7 +18,8 @@ public class User : BaseEntity
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<History> Histories { get; set; } = new List<History>();
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
-    public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    public ICollection<Notification> NotificationsSent { get; set; } = new List<Notification>();
+    public ICollection<Notification> NotificationsReceived { get; set; } = new List<Notification>();
     public ICollection<Playlist> Playlists { get; set; } = new List<Playlist>();
     
     protected User() {}

@@ -12,8 +12,8 @@ public class Artist : User
 
     private Artist() { }
 
-    public Artist(string username, string password, Email email, string stageName, string bio)
-        : base(username, password, email)
+    public Artist(string username, string password, Email emailAddress, string stageName, string bio)
+        : base(username, password, emailAddress)
     {
         if (string.IsNullOrWhiteSpace(stageName))
             throw new ArgumentException("StageName cannot be blank", nameof(stageName));
