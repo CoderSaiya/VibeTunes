@@ -4,16 +4,14 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using VibeTunes.Application.DTOs;
 using VibeTunes.Application.Interfaces;
 using VibeTunes.Domain.Interfaces;
-using VibeTunes.Infrastructure.Persistence.Repositories;
 
 namespace VibeTunes.Infrastructure.Identity;
 
 public class AuthService(
     IConfiguration configuration, 
-    RefreshRepository tokenRepository,
+    IRefreshRepository tokenRepository,
     IUnitOfWork unitOfWork
     ) : IAuthService
 {
