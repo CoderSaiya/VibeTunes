@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Models;
 using VibeTunes.Infrastructure.Configuration;
+using VibeTunes.Infrastructure.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.UseHttpsRedirection();
 
