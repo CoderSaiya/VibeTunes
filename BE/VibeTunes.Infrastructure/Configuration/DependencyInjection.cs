@@ -6,6 +6,7 @@ using VibeTunes.Infrastructure.Persistence.Data;
 using MediatR;
 using VibeTunes.Application.Interfaces;
 using VibeTunes.Domain.Interfaces;
+using VibeTunes.Infrastructure.Hubs;
 using VibeTunes.Infrastructure.Identity;
 using VibeTunes.Infrastructure.Persistence.Repositories;
 
@@ -40,7 +41,10 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        services.AddSignalR();
         
         return services;
     }
