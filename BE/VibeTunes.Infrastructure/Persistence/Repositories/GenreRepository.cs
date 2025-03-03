@@ -17,6 +17,17 @@ public class GenreRepository(AppDbContext context) : IGenreRepository
         return await context.Genres.FirstOrDefaultAsync(x => x.GenreName == genreName);
     }
 
+    public async Task<List<Genre>> GetGenreByNameAsync(IEnumerable<string> names)
+    {
+        var enumerable = names as string[] ?? names.ToArray();
+        
+        var lowerName = enumerable.Select(n => n.ToLower()).ToList();
+        
+        return await context.Genres
+            .Where(g => lowerName.Contains(g.GenreName))
+            .ToListAsync();
+    }
+    
     public async Task<Genre?> GetGenreByIdAsync(Guid id)
     {
         return await context.Genres.FindAsync(id);
