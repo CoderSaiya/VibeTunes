@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using VibeTunes.Domain.Common;
 using VibeTunes.Infrastructure.Configuration;
 using VibeTunes.Infrastructure.Hubs;
 
@@ -34,6 +35,8 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     }));
+
+builder.Services.Configure<AWSOptions>(builder.Configuration.GetSection("AWS"));
 
 // Configure Dependency Injection
 builder.Services.AddInfrastructure(builder.Configuration);
