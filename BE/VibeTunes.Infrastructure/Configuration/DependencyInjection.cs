@@ -9,6 +9,7 @@ using VibeTunes.Domain.Interfaces;
 using VibeTunes.Infrastructure.Hubs;
 using VibeTunes.Infrastructure.Identity;
 using VibeTunes.Infrastructure.Persistence.Repositories;
+using VibeTunes.Infrastructure.Services;
 
 namespace VibeTunes.Infrastructure.Configuration;
 
@@ -40,8 +41,11 @@ public static class DependencyInjection
         services.AddScoped<IRefreshRepository, RefreshRepository>();
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IGmailService, GmailService>();
+        
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         services.AddSignalR();
