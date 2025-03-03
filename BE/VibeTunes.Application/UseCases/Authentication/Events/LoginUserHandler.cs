@@ -55,6 +55,8 @@ public class LoginUserHandler(
         };
         await refreshRepository.AddAsync(refreshToken);
         
+        await unitOfWork.CommitAsync();
+        
         return new LoginUserResult(newAccessToken, newRefreshToken);
     }
 }
