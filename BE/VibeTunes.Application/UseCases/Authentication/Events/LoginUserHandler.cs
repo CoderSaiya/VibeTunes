@@ -23,8 +23,7 @@ public class LoginUserHandler(
             throw new BusinessException("User with this email not exists.");
         
         // check password
-        var passwordHash = authService.HashPassword(request.Password);
-        if (!authService.VerifyPassword(passwordHash, user.Password)) 
+        if (!authService.VerifyPassword(request.Password, user.Password))
             throw new BusinessException("Invalid password.");
 
         // check gmail active
