@@ -10,7 +10,7 @@ public class User : BaseEntity
     public Email EmailAddress {get; set;}
     public SubscriptionValue Rank { get; set; } = SubscriptionValue.Normal;
     public bool IsActive { get; set; } = false;
-    public string ActiveCode {get; set;} = string.Empty!;
+    public string ActiveCode {get; set;} = Guid.NewGuid().ToString("N");
     public bool IsBanned { get; set; } = false;
 
     public Profile Profile { get; set; } = null!;
