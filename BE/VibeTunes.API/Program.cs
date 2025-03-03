@@ -1,4 +1,7 @@
+using Amazon.S3;
+using MediatR;
 using Microsoft.OpenApi.Models;
+using VibeTunes.Application.UseCases.Authentication.Commands;
 using VibeTunes.Domain.Common;
 using VibeTunes.Infrastructure.Configuration;
 using VibeTunes.Infrastructure.Hubs;
@@ -36,7 +39,17 @@ builder.Services.AddSwaggerGen(c =>
         }
     }));
 
+// register AWS
 builder.Services.Configure<AWSOptions>(builder.Configuration.GetSection("AWS"));
+builder.Services.AddAWSService<IAmazonS3>();
+
+builder.Services.AddControllers();
+
+// register MediatR
+builder.Services.AddMediatR(
+    typeof(Program).Assembly,
+    typeof(RegisterUserCommand).Assembly
+);
 
 // Configure Dependency Injection
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -51,7 +64,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// // config authen
+// app.UseAuthentication();
+// app.UseAuthorization();
+
 app.MapHub<NotificationHub>("/notificationHub");
+
+app.MapControllers();
 
 app.UseHttpsRedirection();
 
