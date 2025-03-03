@@ -41,10 +41,12 @@ public static class DependencyInjection
         services.AddScoped<IRefreshRepository, RefreshRepository>();
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<ISongRepository, SongRepository>();
         
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IGmailService, GmailService>();
+        services.AddScoped<IFileService, S3FileService>();
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
