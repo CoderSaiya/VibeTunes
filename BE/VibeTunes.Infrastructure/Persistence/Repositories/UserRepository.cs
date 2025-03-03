@@ -22,7 +22,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _context.Users
-            .Where(u => u.EmailAddress.ToString() == email)
+            .Where(u => u.EmailAddress.Value == email)
             .FirstOrDefaultAsync();
     }
 
