@@ -18,7 +18,7 @@ public sealed class Song : BaseEntity
     public TimeSpan Duration { get; set; }
     public string FileUrl { get; set; }
     public string CoverImgUrl { get; set; }
-    public int Streams { get; set; }
+    public int Streams { get; set; } = 0;
     public DateTime ReleaseDate { get; set; }
     public SongStatus Status { get; set; } = SongStatus.Pending;
 
