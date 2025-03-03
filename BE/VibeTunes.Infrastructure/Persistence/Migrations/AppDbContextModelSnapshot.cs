@@ -34,7 +34,7 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("SongsId");
 
-                    b.ToTable("PlaylistSong");
+                    b.ToTable("PlaylistSong", (string)null);
                 });
 
             modelBuilder.Entity("SongGenres", b =>
@@ -136,11 +136,16 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SongId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Histories");
                 });
@@ -483,7 +488,7 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     b.HasOne("VibeTunes.Domain.Entities.Song", null)
                         .WithMany()
                         .HasForeignKey("SongsId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -520,14 +525,18 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     b.HasOne("VibeTunes.Domain.Entities.Song", "Song")
                         .WithMany()
                         .HasForeignKey("SongId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("VibeTunes.Domain.Entities.User", "User")
-                        .WithMany("Histories")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("VibeTunes.Domain.Entities.User", null)
+                        .WithMany("Histories")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("Song");
 
@@ -579,19 +588,19 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasColumnType("City");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
-                                .HasColumnType("Country");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("District")
                                 .IsRequired()
-                                .HasColumnType("District");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
-                                .HasColumnType("Street");
+                                .HasColumnType("nvarchar(256)");
 
                             b1.HasKey("ProfileId");
 
@@ -608,11 +617,11 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("FirstName")
                                 .IsRequired()
-                                .HasColumnType("FirstName");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("LastName")
                                 .IsRequired()
-                                .HasColumnType("LastName");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.HasKey("ProfileId");
 
@@ -685,7 +694,7 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
 
                             b1.Property<string>("Value")
                                 .IsRequired()
-                                .HasColumnType("Email");
+                                .HasColumnType("nvarchar(256)");
 
                             b1.HasKey("UserId");
 

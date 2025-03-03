@@ -51,7 +51,7 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EmailAddress_Value = table.Column<string>(type: "Email", nullable: false),
+                    EmailAddress_Value = table.Column<string>(type: "nvarchar(256)", nullable: false),
                     Rank = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     ActiveCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -152,12 +152,12 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name_FirstName = table.Column<string>(type: "FirstName", nullable: true),
-                    Name_LastName = table.Column<string>(type: "LastName", nullable: true),
-                    Address_Street = table.Column<string>(type: "Street", nullable: true),
-                    Address_District = table.Column<string>(type: "District", nullable: true),
-                    Address_City = table.Column<string>(type: "City", nullable: true),
-                    Address_Country = table.Column<string>(type: "Country", nullable: true),
+                    Name_FirstName = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    Name_LastName = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    Address_Street = table.Column<string>(type: "nvarchar(256)", nullable: true),
+                    Address_District = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    Address_City = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    Address_Country = table.Column<string>(type: "nvarchar(100)", nullable: true),
                     Gender = table.Column<int>(type: "int", nullable: true),
                     Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -270,6 +270,7 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SongId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Duration = table.Column<int>(type: "int", nullable: false),
+                    UserId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -281,13 +282,18 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                         column: x => x.SongId,
                         principalTable: "Songs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Histories_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Histories_Users_UserId1",
+                        column: x => x.UserId1,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -311,7 +317,7 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                         column: x => x.SongsId,
                         principalTable: "Songs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -352,6 +358,11 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                 name: "IX_Histories_UserId",
                 table: "Histories",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Histories_UserId1",
+                table: "Histories",
+                column: "UserId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_ReceiverId",

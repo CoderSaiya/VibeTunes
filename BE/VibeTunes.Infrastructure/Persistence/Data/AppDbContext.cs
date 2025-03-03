@@ -63,16 +63,16 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
         {
             profiles.OwnsOne(p => p.Address, a =>
             {
-                a.Property(x => x.Street).HasColumnType("Street");
-                a.Property(x => x.District).HasColumnType("District");
-                a.Property(x => x.City).HasColumnType("City");
-                a.Property(x => x.Country).HasColumnType("Country");
+                a.Property(x => x.Street).HasColumnType("nvarchar(256)");
+                a.Property(x => x.District).HasColumnType("nvarchar(100)");
+                a.Property(x => x.City).HasColumnType("nvarchar(100)");
+                a.Property(x => x.Country).HasColumnType("nvarchar(100)");
             });
             
             profiles.OwnsOne(p => p.Name, n =>
             {
-                n.Property(x => x.FirstName).HasColumnType("FirstName");
-                n.Property(x => x.LastName).HasColumnType("LastName");
+                n.Property(x => x.FirstName).HasColumnType("nvarchar(100)");
+                n.Property(x => x.LastName).HasColumnType("nvarchar(100)");
             });
         });
 
@@ -80,7 +80,7 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
         {
             users.OwnsOne(u => u.EmailAddress, e =>
             {
-                e.Property(x => x.Value).HasColumnType("Email");
+                e.Property(x => x.Value).HasColumnType("nvarchar(256)");
             });
         });
         
@@ -95,6 +95,38 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
             .WithMany(u => u.NotificationsReceived)
             .HasForeignKey(c => c.ReceiverId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<History>(entity =>
+        {
+            entity.HasOne(h => h.User)
+                .WithMany()
+                .HasForeignKey(h => h.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(h => h.Song)
+                .WithMany() 
+                .HasForeignKey(h => h.SongId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        modelBuilder.Entity<Playlist>()
+            .HasMany(p => p.Songs)
+            .WithMany(s => s.Playlists)
+            .UsingEntity<Dictionary<string, object>>(
+                "PlaylistSong",
+                j => j.HasOne<Song>()
+                    .WithMany()
+                    .HasForeignKey("SongsId")
+                    .OnDelete(DeleteBehavior.Restrict),
+                j => j.HasOne<Playlist>()
+                    .WithMany()
+                    .HasForeignKey("PlaylistsId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j =>
+                {
+                    j.HasKey("PlaylistsId", "SongsId");
+                    j.ToTable("PlaylistSong");
+                });
         
         base.OnModelCreating(modelBuilder);
     }
