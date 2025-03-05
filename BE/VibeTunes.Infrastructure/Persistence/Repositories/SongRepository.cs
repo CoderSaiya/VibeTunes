@@ -63,6 +63,13 @@ public class SongRepository(AppDbContext context) : ISongRepository
             .Where(s => s.Playlists.Any(p => p.Id == playlistId))
             .ToListAsync();
     }
+    
+    public async Task<Song?> GetSongByIdAsync(Guid songId)
+    {
+        return await context.Songs
+            .Where(s => s.Id == songId)
+            .FirstOrDefaultAsync();
+    }
 
     public async Task<IEnumerable<Song>> GetSongByFilterAsync(SongFilter songFilter)
     {

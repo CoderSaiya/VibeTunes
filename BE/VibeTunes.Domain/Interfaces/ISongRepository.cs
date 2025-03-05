@@ -13,6 +13,7 @@ public interface ISongRepository
     public Task<IEnumerable<Song>> GetSongByArtistAsync(Guid artistId);
     public Task<IEnumerable<Song>> GetSongByAlbumAsync(Guid albumId);
     public Task<IEnumerable<Song>> GetSongByPlaylistAsync(Guid playlistId);
+    public Task<Song?> GetSongByIdAsync(Guid songId);
     public Task<IEnumerable<Song>> GetSongByFilterAsync(SongFilter songFilter);
     public Task AddSongAsync(Song song);
     public Task UpdateSongAsync(Song song); 
