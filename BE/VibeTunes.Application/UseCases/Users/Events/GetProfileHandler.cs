@@ -11,7 +11,7 @@ public class GetProfileHandler(IProfileRepository profileRepository) : IRequestH
     public async Task<ProfileDto> Handle(GetProfileQuery request, CancellationToken cancellationToken)
     {
         // check profile exist
-        var profile = await profileRepository.GetProfileByIdAsync(request.UserId);
+        var profile = await profileRepository.GetProfileByUserAsync(request.UserId);
         if (profile is null)
             throw new BusinessException("User does not exist");
 
