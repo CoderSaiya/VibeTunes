@@ -11,4 +11,6 @@ public interface IUserRepository
     Task<IEnumerable<User>> GetAllAsync();
     Task<IEnumerable<User>> GetAllBannedAsync();
     Task<IEnumerable<User>> GetAllActiveAsync();
+    public Task<bool> UpdateUserAsync(User user);
+    public Task<bool> DeleteUserAsync(Guid userId);
 }

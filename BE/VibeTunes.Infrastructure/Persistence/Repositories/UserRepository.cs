@@ -51,4 +51,24 @@ public class UserRepository(AppDbContext context) : IUserRepository
             .Where(u => u.IsActive == true)
             .ToListAsync();
     }
+
+    public async Task<bool> UpdateUserAsync(User user)
+    {
+        var existingUser = await context.Users.FindAsync(user.Id);
+        if (existingUser == null)
+            return false;
+        
+        context.Entry(existingUser).CurrentValues.SetValues(user);
+        return true;
+    }
+
+    public async Task<bool> DeleteUserAsync(Guid userId)
+    {
+        var existingUser = await context.Users.FindAsync(userId);
+        if (existingUser == null)
+            return false;
+        
+        context.Users.Remove(existingUser);
+        return true;
+    }
 }

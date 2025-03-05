@@ -17,6 +17,13 @@ public class ProfileRepository(AppDbContext context) : IProfileRepository
         return await context.Profiles.FindAsync(profileId);
     }
 
+    public async Task<Profile?> GetProfileByUserAsync(Guid userId)
+    {
+        return await context.Profiles
+            .Where(p => p.UserId == userId)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<bool> CreateProfileAsync(Profile profile)
     {
         try
