@@ -1,10 +1,10 @@
 ﻿using MediatR;
 using VibeTunes.Application.Exceptions;
-using VibeTunes.Application.UseCases.Authentication.Commands;
+using VibeTunes.Application.UseCases.Users.Commands;
 using VibeTunes.Domain.Interfaces;
 using VibeTunes.Domain.ValueObjects;
 
-namespace VibeTunes.Application.UseCases.Authentication.Events;
+namespace VibeTunes.Application.UseCases.Users.Events;
 
 public class UpdateProfileHandler(
     IUserRepository userRepository, 

@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using VibeTunes.Domain.ValueObjects;
 
-namespace VibeTunes.Application.UseCases.Authentication.Commands;
+namespace VibeTunes.Application.UseCases.Users.Commands;
 
 public record UpdateProfileCommand(
     Guid UserId,

@@ -1,10 +1,10 @@
 ﻿using MediatR;
 using VibeTunes.Application.DTOs;
 using VibeTunes.Application.Exceptions;
-using VibeTunes.Application.UseCases.Authentication.Queries;
+using VibeTunes.Application.UseCases.Users.Queries;
 using VibeTunes.Domain.Interfaces;
 
-namespace VibeTunes.Application.UseCases.Authentication.Events;
+namespace VibeTunes.Application.UseCases.Users.Events;
 
 public class GetProfileHandler(IProfileRepository profileRepository) : IRequestHandler<GetProfileQuery, ProfileDto>
 {
