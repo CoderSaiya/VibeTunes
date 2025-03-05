@@ -13,9 +13,9 @@ public class LoginUserHandler(
     IAuthService authService, 
     IUserRepository userRepository,
     IRefreshRepository refreshRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<LoginUserCommand, LoginUserResult>
+    IUnitOfWork unitOfWork) : IRequestHandler<LoginUserCommand, TokenDto>
 {
-    public async Task<LoginUserResult> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<TokenDto> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
         // check user exists
         var user = await userRepository.GetByEmailAsync(request.Email);
@@ -57,6 +57,6 @@ public class LoginUserHandler(
         
         await unitOfWork.CommitAsync();
         
-        return new LoginUserResult(newAccessToken, newRefreshToken);
+        return new TokenDto(newAccessToken, newRefreshToken);
     }
 }

@@ -6,4 +6,4 @@ namespace VibeTunes.Application.UseCases.Authentication.Commands;
 public record LoginUserCommand(
     string Email,
     string Password
-    ) : IRequest<LoginUserResult>;
+    ) : IRequest<TokenDto>;
