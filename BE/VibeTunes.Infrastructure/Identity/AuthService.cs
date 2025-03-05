@@ -11,8 +11,7 @@ namespace VibeTunes.Infrastructure.Identity;
 
 public class AuthService(
     IConfiguration configuration, 
-    IRefreshRepository tokenRepository,
-    IUnitOfWork unitOfWork
+    IRefreshRepository tokenRepository
     ) : IAuthService
 {
     public string HashPassword(string password)
@@ -69,8 +68,6 @@ public class AuthService(
         };
         
         var newAccessToken = GenerateAccessToken(claims);
-        
-        await unitOfWork.CommitAsync();
         
         return newAccessToken;
     }
