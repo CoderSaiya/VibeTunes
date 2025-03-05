@@ -34,4 +34,15 @@ public class S3FileService(IAmazonS3 s3Client, IOptions<AWSOptions> awsOptions) 
         var response = await s3Client.GetObjectAsync(getRequest, cancellationToken);
         return response.ResponseStream;
     }
+
+    public async Task DeleteFileAsync(string fileName, CancellationToken cancellationToken)
+    {
+        var deleteRequest = new DeleteObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = fileName
+        };
+        
+        await s3Client.DeleteObjectAsync(deleteRequest, cancellationToken);
+    }
 }
