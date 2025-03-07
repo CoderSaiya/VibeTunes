@@ -1,6 +1,6 @@
 ﻿namespace VibeTunes.Domain.Specifications;
 
-public class SongFilter
+public class SongFilter : GlobalFilter
 {
     public string? TitleContains { get; init; }
     public string? Genre { get; init; }
@@ -8,8 +8,4 @@ public class SongFilter
     public TimeSpan? MaxDuration { get; init; }
     public DateTime? ReleaseAfter { get; init; }
     public DateTime? ReleaseBefore { get; init; }
-    public string SortBy { get; init; } = "Title";
-    public string SortDirection { get; init; } = "asc";
-    public int PageNumber { get; init; } = 1;
-    public int PageSize { get; init; } = 10;
 }
