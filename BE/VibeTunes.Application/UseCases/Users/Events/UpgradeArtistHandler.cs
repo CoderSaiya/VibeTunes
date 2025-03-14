@@ -60,7 +60,7 @@ public class UpgradeArtistHandler(
         await userRepository.ReplaceUserAsync(existingUser, artist);
         
         // send email && notification
-        await notificationService.SendNotification("admin", artist.Username, "User upgraded");
+        await notificationService.SendNotification(Guid.Parse("c7b70dd9-29c7-45ce-91de-220c9795758a"), artist.Id, "User upgraded");
         
         var upgradeNotificationLink = $"http://localhost:3000/dashboard";
 

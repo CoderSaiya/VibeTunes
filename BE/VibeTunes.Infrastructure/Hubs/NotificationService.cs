@@ -11,15 +11,15 @@ public class NotificationService(
     INotificationRepository notificationRepository
 ) : INotificationService
 {
-    public async Task SendNotification(string sender, string recipientId, string message)
+    public async Task SendNotification(Guid senderId, Guid recipientId, string message)
     {
-        var senderUser = await userRepository.GetByUsernameAsync(sender);
-        if (senderUser is null || string.IsNullOrEmpty(recipientId)) return;
+        var senderUser = await userRepository.GetByIdAsync(senderId);
+        if (senderUser is null || recipientId == Guid.Empty) return;
 
         var notification = new Notification
         {
             SenderId = senderUser.Id,
-            ReceiverId = Guid.Parse(recipientId),
+            ReceiverId = recipientId,
             Message = message,
             CreatedDate = DateTime.UtcNow
         };
@@ -27,12 +27,12 @@ public class NotificationService(
         await notificationRepository.CreateNotificationAsync(notification);
 
         // Send Notify by SignalR
-        await hubContext.Clients.User(recipientId).SendAsync("ReceiveNotification", new
+        await hubContext.Clients.User(recipientId.ToString()).SendAsync("ReceiveNotification", new
         {
             id = notification.Id,
             message = notification.Message,
             createdAt = notification.CreatedDate,
-            sender = sender,
+            sender = senderId,
             isRead = notification.IsRead
         });
     }

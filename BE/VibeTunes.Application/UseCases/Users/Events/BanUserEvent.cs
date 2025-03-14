@@ -22,7 +22,7 @@ public class BanUserEvent(
         
         await unitOfWork.CommitAsync();
         
-        await notificationService.SendNotification("System", existingUser.Id.ToString(), "Your account has been banned.");
+        await notificationService.SendNotification(Guid.Parse("c7b70dd9-29c7-45ce-91de-220c9795758a"), existingUser.Id, "Your account has been banned.");
         
         return existingUser.Id;
     }

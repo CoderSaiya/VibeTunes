@@ -67,8 +67,8 @@ public class CreateSongHandler(
         
         // send notification to artist
         await notificationService.SendNotification(
-            "admin",
-            existingArtist.Username,
+            Guid.Parse("c7b70dd9-29c7-45ce-91de-220c9795758a"), 
+            existingArtist.Id,
             $"Your new song created: {newSong.Title}"
             );
         

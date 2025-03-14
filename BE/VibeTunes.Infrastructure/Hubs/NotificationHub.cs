@@ -27,15 +27,15 @@ public class NotificationHub(INotificationService notificationService) : Hub
         return base.OnDisconnectedAsync(exception);
     }
     
-    public async Task SendNotification(string sender, string recipientId, string message)
+    public async Task SendNotification(Guid senderId, Guid recipientId, string message)
     {
-        await notificationService.SendNotification(sender, recipientId, message);
+        await notificationService.SendNotification(senderId, recipientId, message);
         
-        if (UserConnections.TryGetValue(recipientId, out var recipientConnectionId))
+        if (UserConnections.TryGetValue(recipientId.ToString(), out var recipientConnectionId))
         {
             await Clients.Client(recipientConnectionId).SendAsync("ReceiveNotification", new
             {
-                sender,
+                senderId,
                 message,
                 timestamp = DateTime.UtcNow
             });
