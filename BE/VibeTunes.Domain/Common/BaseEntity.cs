@@ -6,6 +6,6 @@ public abstract class BaseEntity
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
-    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-    public DateTime ModifiedDate { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow.ToLocalTime();
+    public DateTime ModifiedDate { get; set; } = DateTime.UtcNow.ToLocalTime();
 }
