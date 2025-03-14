@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Transactions;
 using VibeTunes.Domain.Common;
+using VibeTunes.Domain.ValueObjects;
 
 namespace VibeTunes.Domain.Entities;
 

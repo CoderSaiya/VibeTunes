@@ -12,6 +12,4 @@ public sealed class History : BaseEntity
     public Guid SongId { get; set; }
     [ForeignKey("SongId")]
     public Song Song { get; set; }
-    
-    public int Duration { get; set; }
 }
