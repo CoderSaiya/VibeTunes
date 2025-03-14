@@ -10,10 +10,17 @@
     <PackageReference Include="MediatR" Version="11.0.0" />
     <PackageReference Include="MediatR.Contracts" Version="1.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.2" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\VibeTunes.Domain\VibeTunes.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="UseCases\Authentication\Queries\" />
+    <Folder Include="UseCases\Histories\Commands\" />
+    <Folder Include="UseCases\Histories\Events\" />
   </ItemGroup>
 
 </Project>
