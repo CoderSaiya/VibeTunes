@@ -82,6 +82,11 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
             {
                 e.Property(x => x.Value).HasColumnType("nvarchar(256)");
             });
+            
+            users.HasMany(u => u.Histories)
+                .WithOne(h => h.User)
+                .HasForeignKey(h => h.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
         
         modelBuilder.Entity<Notification>()
@@ -98,11 +103,6 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
         
         modelBuilder.Entity<History>(entity =>
         {
-            entity.HasOne(h => h.User)
-                .WithMany()
-                .HasForeignKey(h => h.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             entity.HasOne(h => h.Song)
                 .WithMany() 
                 .HasForeignKey(h => h.SongId)
