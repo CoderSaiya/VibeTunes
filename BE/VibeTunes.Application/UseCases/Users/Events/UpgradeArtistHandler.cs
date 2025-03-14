@@ -4,6 +4,7 @@ using VibeTunes.Application.Interfaces;
 using VibeTunes.Application.UseCases.Users.Commands;
 using VibeTunes.Domain.Entities;
 using VibeTunes.Domain.Interfaces;
+using VibeTunes.Domain.ValueObjects;
 
 namespace VibeTunes.Application.UseCases.Users.Events;
 
@@ -34,11 +35,29 @@ public class UpgradeArtistHandler(
             throw new BusinessException("User is already artist");
         
         // upgrade user
-        var artist = (Artist)existingUser;
-        artist.StageName = request.StageName;
-        artist.Bio = request.Bio;
+        var artist = new Artist(
+            existingUser.Username,
+            existingUser.Password,
+            new Email(existingUser.EmailAddress.Value),
+            request.StageName,
+            request.Bio
+        )
+        {
+            Id = existingUser.Id,
+            CreatedDate = existingUser.CreatedDate,
+            IsActive = existingUser.IsActive,
+            IsBanned = existingUser.IsBanned,
+            Rank = existingUser.Rank,
+            Profile = existingUser.Profile,
+            RefreshTokens = existingUser.RefreshTokens,
+            Histories = existingUser.Histories,
+            Transactions = existingUser.Transactions,
+            NotificationsSent = existingUser.NotificationsSent,
+            NotificationsReceived = existingUser.NotificationsReceived,
+            Playlists = existingUser.Playlists
+        };
         
-        await userRepository.UpdateUserAsync(artist);
+        await userRepository.ReplaceUserAsync(existingUser, artist);
         
         // send email && notification
         await notificationService.SendNotification("admin", artist.Username, "User upgraded");
