@@ -1,4 +1,5 @@
-﻿using Amazon.S3;
+﻿using System.Net;
+using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using VibeTunes.Application.Interfaces;
@@ -21,6 +22,19 @@ public class S3FileService(IAmazonS3 s3Client, IOptions<AWSOptions> awsOptions) 
         };
         
         await s3Client.PutObjectAsync(putObject, cancellationToken);
+    }
+
+    public async Task<Stream?> GetFileStreamAsync(string key, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await s3Client.GetObjectAsync(_bucketName, key, cancellationToken);
+            return response.ResponseStream;
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
     }
 
     public async Task<Stream> DownloadFileAsync(string fileName, CancellationToken cancellationToken)
