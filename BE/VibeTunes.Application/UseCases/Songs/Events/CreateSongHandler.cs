@@ -23,6 +23,21 @@ public class CreateSongHandler(
         if (existingArtist is null)
             throw new BusinessException("Artist not found!");
         
+        // split genre
+        var genreNames = request.Genre
+            .Split(", ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(g => g.ToLowerInvariant())
+            .Distinct()
+            .ToList();
+        
+        var existingGenres = await genreRepository.GetGenreByNameAsync(genreNames);
+        if (existingGenres.Count != genreNames.Count)
+        {
+            var existingGenreNames = existingGenres.Select(g => g.GenreName.ToLowerInvariant()).ToList();
+            var invalidGenres = genreNames.Except(existingGenreNames).ToList();
+            throw new BusinessException($"Invalid genres: {string.Join(", ", invalidGenres)}");
+        }
+        
         // upload audio & image
         var audioKey = $"audios/{existingArtist.Id}/{Guid.NewGuid()}_{request.Audio.FileName}";
         await using (var audioStream = request.Audio.OpenReadStream())
@@ -37,18 +52,6 @@ public class CreateSongHandler(
         }
         
         // create song
-        var genreNames = request.Genre
-            .Split(" ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Distinct()
-            .ToList();
-        
-        var existingGenres = await genreRepository.GetGenreByNameAsync(genreNames);
-        if (existingGenres.Count != genreNames.Count)
-        {
-            var invalidGenres = genreNames.Except(existingGenres.Select(g => g.GenreName)).ToList();
-            throw new BusinessException($"Invalid genres: {string.Join(", ", invalidGenres)}");
-        }
-        
         var newSong = new Song
         {
             ArtistId = existingArtist.Id,
