@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VibeTunes.Domain.Entities;
 using VibeTunes.Domain.Interfaces;
+using VibeTunes.Domain.Specifications;
 using VibeTunes.Infrastructure.Persistence.Data;
+using System.Linq.Dynamic.Core;
 
 namespace VibeTunes.Infrastructure.Persistence.Repositories;
 
@@ -36,6 +38,22 @@ public class PlaylistRepository(AppDbContext context) : IPlaylistRepository
         return await context.Playlists
             .Where(p => p.UserId == userId && p.IsPublic == isPublic)
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Playlist>> GetPlaylistsByFilterAsync(PlaylistFilter filter)
+    {
+        IQueryable<Playlist> query = context.Playlists.AsQueryable();
+        
+        if (!string.IsNullOrWhiteSpace(filter.Keyword))
+            query = query.Where(s => EF.Functions.Like(s.Name, $"%{filter.Keyword}%") ||
+                                            EF.Functions.Like(s.Description, $"%{filter.Keyword}%"));
+        
+        string orderByString = $"{filter.SortBy} {filter.SortDirection}";
+        query = query.OrderBy(orderByString);
+        
+        query = query.Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize);
+        
+        return await query.ToListAsync();
     }
 
     public async Task<bool> CreatePlaylistAsync(Playlist playlist)

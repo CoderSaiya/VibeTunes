@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VibeTunes.Domain.Entities;
 using VibeTunes.Domain.Interfaces;
+using VibeTunes.Domain.Specifications;
 using VibeTunes.Infrastructure.Persistence.Data;
+using System.Linq.Dynamic.Core;
 
 namespace VibeTunes.Infrastructure.Persistence.Repositories;
 
@@ -29,6 +31,66 @@ public class AlbumRepository(AppDbContext context) : IAlbumRepository
         return await context.Albums
             .Where(a => a.SongsList.Any(s => s.Id == songId))
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<Album>> GetAlbumsByFilterAsync(AlbumFilter filter)
+    {
+        var query = context.Set<Album>()
+            .Include(a => a.Artist)
+            .ThenInclude(a => a.Profile)
+            .Include(a => a.SongsList)
+            .AsQueryable();
+        
+        if (!string.IsNullOrEmpty(filter.Keyword))
+            query = query.Where(a => a.Title.Contains(filter.Keyword));
+        
+        if (!string.IsNullOrEmpty(filter.ByArtist))
+        {
+            var searchTerms = filter.ByArtist.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            if (searchTerms.Length == 1)
+            {
+                string term = searchTerms[0];
+                query = query.Where(a => a.Artist.Profile.Name != null && 
+                                         (EF.Functions.Like(a.Artist.Profile.Name.FirstName, $"%{term}%") ||
+                                          EF.Functions.Like(a.Artist.Profile.Name.LastName, $"%{term}%")));
+            }
+            else if (searchTerms.Length == 2)
+            {
+                string firstTerm = searchTerms[0];
+                string lastTerm = searchTerms[1];
+                query = query.Where(a => a.Artist.Profile.Name != null && 
+                                         (EF.Functions.Like(a.Artist.Profile.Name.FirstName, $"%{firstTerm}%") &&
+                                          EF.Functions.Like(a.Artist.Profile.Name.LastName, $"%{lastTerm}%")));
+            }
+            else
+            {
+                foreach (var term in searchTerms)
+                {
+                    string currentTerm = term;
+                    query = query.Where(a =>
+                        a.Artist.Profile.Name != null && 
+                        EF.Functions.Like(a.Artist.Profile.Name.FirstName + " " + a.Artist.Profile.Name.LastName, $"%{currentTerm}%"));
+                }
+            }
+        }
+        
+        if (filter.MinReleaseDate.HasValue)
+            query = query.Where(a => a.ReleaseDate >= filter.MinReleaseDate.Value);
+        if (filter.MaxReleaseDate.HasValue)
+            query = query.Where(a => a.ReleaseDate <= filter.MaxReleaseDate.Value);
+        
+        if (filter.MinStreams.HasValue)
+            query = query.Where(a => a.Streams >= filter.MinStreams.Value);
+        if (filter.MaxStreams.HasValue)
+            query = query.Where(a => a.Streams <= filter.MaxStreams.Value);
+        
+        string orderByString = $"{filter.SortBy} {filter.SortDirection}";
+        query = query.OrderBy(orderByString);
+        
+        query = query.Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize);
+        
+        return await query.ToListAsync();
     }
 
     public async Task<bool> CreateAlbumAsync(Album album)

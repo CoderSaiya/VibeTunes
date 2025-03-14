@@ -73,7 +73,8 @@ public class SongRepository(AppDbContext context) : ISongRepository
 
     public async Task<IEnumerable<Song>> GetSongByFilterAsync(SongFilter songFilter)
     {
-        IQueryable<Song> query = context.Songs;
+        IQueryable<Song> query = context.Songs
+            .AsQueryable();
         
         if (!string.IsNullOrWhiteSpace(songFilter.TitleContains))
             query = query.Where(s => s.Title.Contains(songFilter.TitleContains));
@@ -93,12 +94,9 @@ public class SongRepository(AppDbContext context) : ISongRepository
             query = query.Where(s => s.ReleaseDate >= songFilter.ReleaseAfter);
         if (songFilter.ReleaseBefore.HasValue)
             query = query.Where(s => s.ReleaseDate <= songFilter.ReleaseBefore);
-
-        if (!string.IsNullOrWhiteSpace(songFilter.SortBy))
-        {
-            string orderByString = $"{songFilter.SortBy} {songFilter.SortDirection}";
-            query = query.OrderBy(orderByString);
-        }
+        
+        string orderByString = $"{songFilter.SortBy} {songFilter.SortDirection}";
+        query = query.OrderBy(orderByString);
         
         query = query.Skip((songFilter.PageNumber - 1) * songFilter.PageSize).Take(songFilter.PageSize);
 

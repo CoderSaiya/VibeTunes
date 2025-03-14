@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VibeTunes.Domain.Entities;
 using VibeTunes.Domain.Interfaces;
+using VibeTunes.Domain.Specifications;
 using VibeTunes.Infrastructure.Persistence.Data;
+using System.Linq.Dynamic.Core;
 
 namespace VibeTunes.Infrastructure.Persistence.Repositories;
 
@@ -39,6 +41,19 @@ public class GenreRepository(AppDbContext context) : IGenreRepository
             .Where(g => g.Songs.Any(s => s.ArtistId == artistId))
             .Distinct()
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Genre>> GetGenresByFilterAsync(GlobalFilter filter)
+    {
+        IQueryable<Genre> query = context.Genres
+            .AsQueryable();
+        
+        string orderByString = $"{filter.SortBy} {filter.SortDirection}";
+        query = query.OrderBy(orderByString);
+        
+        query = query.Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize);
+        
+        return await query.ToListAsync();
     }
 
     public async Task<bool> CreateGenreAsync(Genre genre)
