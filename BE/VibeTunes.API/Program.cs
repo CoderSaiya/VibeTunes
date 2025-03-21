@@ -1,5 +1,8 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon.S3;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using VibeTunes.Application.UseCases.Authentication.Commands;
 using VibeTunes.Domain.Common;
@@ -43,6 +46,14 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.Configure<AWSOptions>(builder.Configuration.GetSection("AWS"));
 builder.Services.AddAWSService<IAmazonS3>();
 
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.Configure<JsonOptions>(options =>
+{
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+});
+
 builder.Services.AddControllers();
 
 // register MediatR
@@ -53,7 +64,7 @@ builder.Services.AddMediatR(
 
 // Configure Dependency Injection
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddApplication();
+// builder.Services.AddApplication();
 
 var app = builder.Build();
 
