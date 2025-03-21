@@ -2,5 +2,5 @@
 
 public interface INotificationService
 {
-    public Task SendNotification(string sender, string recipientId, string message);
+    public Task SendNotification(Guid senderId, Guid recipientId, string message);
 }
