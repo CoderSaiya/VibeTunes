@@ -41,7 +41,7 @@ public class LoginUserHandler(
         {
             new Claim(ClaimTypes.Name, user.EmailAddress.ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Role, (user is Artist) ? "Artist" : "User"),
+            new Claim(ClaimTypes.Role, user is Admin ? "Admin" : user is Artist ? "Artist" : "User"),
         };
         
         var newAccessToken = authService.GenerateAccessToken(claims);
