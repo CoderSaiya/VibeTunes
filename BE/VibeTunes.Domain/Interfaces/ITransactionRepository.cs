@@ -7,6 +7,7 @@ namespace VibeTunes.Domain.Interfaces;
 public interface ITransactionRepository
 {
     public Task<IEnumerable<Transaction>> GetAllTransactionsAsync();
+    public Task<Transaction?> GetTransactionsByIdAsync(Guid transactionId);
     public Task<IEnumerable<Transaction>> GetTransactionsByUserIdAsync(Guid userId);
     public Task<IEnumerable<Transaction>> GetTransactionsByDateAsync(DateTime date);
     public Task<IEnumerable<Transaction>> GetTransactionsByDateAsync(Guid userId, DateTime date);

@@ -17,5 +17,5 @@ public sealed class Transaction : BaseEntity
     public double Amount { get; set; }
     public string Currency { get; set; }
     public string PaymentMethod { get; set; }
-    public TransactionStatus Status { get; set; }
+    public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
 }
