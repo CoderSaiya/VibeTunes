@@ -14,6 +14,11 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
     {
         return await context.Transactions.ToListAsync();
     }
+    
+    public async Task<Transaction?> GetTransactionsByIdAsync(Guid transactionId)
+    {
+        return await context.Transactions.FindAsync(transactionId);
+    }
 
     public async Task<IEnumerable<Transaction>> GetTransactionsByUserIdAsync(Guid userId)
     {
