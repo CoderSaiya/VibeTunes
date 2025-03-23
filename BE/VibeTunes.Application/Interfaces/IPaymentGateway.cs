@@ -1,6 +1,6 @@
-﻿using VibeTunes.Domain.Specifications;
+﻿using VibeTunes.Application.DTOs;
 
-namespace VibeTunes.Domain.Interfaces;
+namespace VibeTunes.Application.Interfaces;
 
 public interface IPaymentGateway
 {
