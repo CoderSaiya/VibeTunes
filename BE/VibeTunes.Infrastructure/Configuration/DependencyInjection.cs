@@ -6,6 +6,7 @@ using VibeTunes.Infrastructure.Persistence.Data;
 using MediatR;
 using VibeTunes.Application.Interfaces;
 using VibeTunes.Domain.Interfaces;
+using VibeTunes.Infrastructure.Factories;
 using VibeTunes.Infrastructure.Hubs;
 using VibeTunes.Infrastructure.Identity;
 using VibeTunes.Infrastructure.Persistence.Repositories;
@@ -47,6 +48,10 @@ public static class DependencyInjection
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IGmailService, GmailService>();
         services.AddScoped<IFileService, S3FileService>();
+        
+        services.AddScoped<StripeGateway>();
+        services.AddScoped<MomoGateway>();
+        services.AddScoped<PaymentGatewayFactory>();
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
