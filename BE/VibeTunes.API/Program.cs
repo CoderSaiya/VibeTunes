@@ -46,6 +46,12 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.Configure<AWSOptions>(builder.Configuration.GetSection("AWS"));
 builder.Services.AddAWSService<IAmazonS3>();
 
+// Options pattern for Stripe
+builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
+
+// Options pattern for MoMo
+builder.Services.Configure<MoMoOptions>(builder.Configuration.GetSection("MoMo"));
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.Configure<JsonOptions>(options =>
