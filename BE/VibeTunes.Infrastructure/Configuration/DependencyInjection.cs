@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IGmailService, GmailService>();
         services.AddScoped<IFileService, S3FileService>();
+        services.AddScoped<IRecommendationService, RecommendationService>();
         
         services.AddScoped<StripeGateway>();
         services.AddScoped<MomoGateway>();
