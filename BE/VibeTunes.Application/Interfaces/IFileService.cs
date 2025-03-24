@@ -6,4 +6,5 @@ public interface IFileService
     public Task<Stream?> GetFileStreamAsync(string fileName, CancellationToken cancellationToken);
     Task<Stream> DownloadFileAsync(string fileName, CancellationToken cancellationToken);
     public Task DeleteFileAsync(string fileName, CancellationToken cancellationToken);
+    public Task<string> SaveFileAsync(byte[] fileData, string fileName, string action, CancellationToken cancellationToken);
 }

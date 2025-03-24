@@ -1,13 +1,18 @@
 ﻿using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using VibeTunes.Application.Interfaces;
 using VibeTunes.Domain.Common;
 
 namespace VibeTunes.Infrastructure.Services;
 
-public class S3FileService(IAmazonS3 s3Client, IOptions<AWSOptions> awsOptions) : IFileService
+public class S3FileService(
+    IAmazonS3 s3Client, 
+    IOptions<AWSOptions> awsOptions,
+    IConfiguration configuration
+    ) : IFileService
 {
     private readonly string _bucketName = awsOptions.Value.BucketName;
 
@@ -58,5 +63,32 @@ public class S3FileService(IAmazonS3 s3Client, IOptions<AWSOptions> awsOptions) 
         };
         
         await s3Client.DeleteObjectAsync(deleteRequest, cancellationToken);
+    }
+    
+    public async Task<string> SaveFileAsync(byte[] content, string fileName, string? action, CancellationToken cancellationToken)
+    {
+        var baseFolder = configuration["FilePath:Data"]!;
+        
+        if (!Directory.Exists(baseFolder))
+        {
+            Directory.CreateDirectory(baseFolder);
+        }
+        
+        var filePath = Path.Combine(baseFolder, fileName);
+
+        if (action is not null && action.ToLower() == "add")
+        {
+            int count = 1;
+            string originalFileName = Path.GetFileNameWithoutExtension(fileName);
+            string extension = Path.GetExtension(fileName);
+            while (File.Exists(filePath))
+            {
+                string tempFileName = $"{originalFileName}({count++}){extension}";
+                filePath = Path.Combine(baseFolder, tempFileName);
+            }
+        }
+        
+        await File.WriteAllBytesAsync(filePath, content, cancellationToken);
+        return filePath;
     }
 }
