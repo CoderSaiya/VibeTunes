@@ -41,6 +41,19 @@ public class S3FileService(
             return null;
         }
     }
+    
+    public async Task<string> GetUrlAsync(string key, CancellationToken cancellationToken)
+    {
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = _bucketName,
+            Key = key,
+            Expires = DateTime.UtcNow.AddHours(10),
+            Verb = HttpVerb.GET
+        };
+        
+        return await s3Client.GetPreSignedURLAsync(request);
+    }
 
     public async Task<Stream> DownloadFileAsync(string fileName, CancellationToken cancellationToken)
     {
@@ -78,17 +91,15 @@ public class S3FileService(
 
         if (action is not null && action.ToLower() == "add")
         {
-            int count = 1;
-            string originalFileName = Path.GetFileNameWithoutExtension(fileName);
-            string extension = Path.GetExtension(fileName);
-            while (File.Exists(filePath))
-            {
-                string tempFileName = $"{originalFileName}({count++}){extension}";
-                filePath = Path.Combine(baseFolder, tempFileName);
-            }
+            await using var stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.None, 4096,
+                useAsync: true);
+            await stream.WriteAsync(content, 0, content.Length, cancellationToken);
+        }
+        else
+        {
+            await File.WriteAllBytesAsync(filePath, content, cancellationToken);
         }
         
-        await File.WriteAllBytesAsync(filePath, content, cancellationToken);
         return filePath;
     }
 }

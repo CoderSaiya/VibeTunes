@@ -1,8 +1,10 @@
-﻿using MediatR;
+﻿using System.Text;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using VibeTunes.Application.Exceptions;
 using VibeTunes.Application.Interfaces;
 using VibeTunes.Application.UseCases.Songs.Queries;
+using VibeTunes.Domain.Common;
 using VibeTunes.Domain.Entities;
 using VibeTunes.Domain.Interfaces;
 
@@ -13,10 +15,11 @@ public class GetSongStreamHandler(
     ISongRepository songRepository,
     IHistoryRepository historyRepository,
     IHttpContextAccessor httpContextAccessor,
+    IBackgroundTaskQueue backgroundTaskQueue,
     IUnitOfWork unitOfWork
-    ) : IRequestHandler<GetSongStreamQuery, Stream?>
+    ) : IRequestHandler<GetSongStreamQuery, string?>
 {
-    public async Task<Stream?> Handle(GetSongStreamQuery request, CancellationToken cancellationToken)
+    public async Task<string?> Handle(GetSongStreamQuery request, CancellationToken cancellationToken)
     {
         // check song exist
         var existingSong = await songRepository.GetSongByIdAsync(request.SongId);
@@ -31,17 +34,31 @@ public class GetSongStreamHandler(
         // update history
         if (!isRangeRequest && !isHeadRequest)
         {
-            var history = new History
+            backgroundTaskQueue.Enqueue(async ct =>
             {
-                UserId = request.UserId,
-                SongId = request.SongId,
-            };
+                var history = new History
+                {
+                    UserId = request.UserId,
+                    SongId = request.SongId,
+                    ListenDuration = 0
+                };
 
-            await historyRepository.CreateHistoryAsync(history);
-            await unitOfWork.CommitAsync();
+                await historyRepository.CreateHistoryAsync(history);
+                await unitOfWork.CommitAsync();
+
+                // log (CSV) in append format
+                var sb = new StringBuilder();
+                sb.AppendLine($"{GuidConverter.ToFloat(history.UserId)}," +
+                              $"{GuidConverter.ToFloat(history.SongId)}," +
+                              $"{history.ListenDuration}");
+
+                var csvBytes = Encoding.UTF8.GetBytes(sb.ToString());
+                var fileName = "song-rating.csv";
+                await fileService.SaveFileAsync(csvBytes, fileName, "add", ct);
+            });
         }
         
         // return file stream
-        return await fileService.GetFileStreamAsync(existingSong.FileUrl, cancellationToken);
+        return await fileService.GetUrlAsync(existingSong.FileUrl, cancellationToken);
     }
 }

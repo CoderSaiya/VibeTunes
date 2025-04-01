@@ -54,6 +54,9 @@ public static class DependencyInjection
         services.AddScoped<MomoGateway>();
         services.AddScoped<PaymentGatewayFactory>();
         
+        services.AddSingleton<IBackgroundTaskQueue>(new BackgroundTaskQueue(capacity: 100));
+        services.AddHostedService<QueuedHostedService>();
+        
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         services.AddSignalR();
