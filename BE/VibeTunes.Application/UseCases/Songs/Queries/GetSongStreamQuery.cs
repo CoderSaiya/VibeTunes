@@ -5,4 +5,4 @@ namespace VibeTunes.Application.UseCases.Songs.Queries;
 public record GetSongStreamQuery(
     Guid SongId,
     Guid UserId
-    ) : IRequest<Stream?>;
+    ) : IRequest<string?>;

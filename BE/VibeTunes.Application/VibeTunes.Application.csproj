@@ -19,8 +19,6 @@
 
   <ItemGroup>
     <Folder Include="UseCases\Authentication\Queries\" />
-    <Folder Include="UseCases\Histories\Commands\" />
-    <Folder Include="UseCases\Histories\Events\" />
   </ItemGroup>
 
 </Project>

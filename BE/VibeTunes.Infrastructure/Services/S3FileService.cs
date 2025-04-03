@@ -1,13 +1,18 @@
 ﻿using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using VibeTunes.Application.Interfaces;
 using VibeTunes.Domain.Common;
 
 namespace VibeTunes.Infrastructure.Services;
 
-public class S3FileService(IAmazonS3 s3Client, IOptions<AWSOptions> awsOptions) : IFileService
+public class S3FileService(
+    IAmazonS3 s3Client, 
+    IOptions<AWSOptions> awsOptions,
+    IConfiguration configuration
+    ) : IFileService
 {
     private readonly string _bucketName = awsOptions.Value.BucketName;
 
@@ -36,6 +41,19 @@ public class S3FileService(IAmazonS3 s3Client, IOptions<AWSOptions> awsOptions) 
             return null;
         }
     }
+    
+    public async Task<string> GetUrlAsync(string key, CancellationToken cancellationToken)
+    {
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = _bucketName,
+            Key = key,
+            Expires = DateTime.UtcNow.AddHours(10),
+            Verb = HttpVerb.GET
+        };
+        
+        return await s3Client.GetPreSignedURLAsync(request);
+    }
 
     public async Task<Stream> DownloadFileAsync(string fileName, CancellationToken cancellationToken)
     {
@@ -58,5 +76,30 @@ public class S3FileService(IAmazonS3 s3Client, IOptions<AWSOptions> awsOptions) 
         };
         
         await s3Client.DeleteObjectAsync(deleteRequest, cancellationToken);
+    }
+    
+    public async Task<string> SaveFileAsync(byte[] content, string fileName, string? action, CancellationToken cancellationToken)
+    {
+        var baseFolder = configuration["FilePath:Data"]!;
+        
+        if (!Directory.Exists(baseFolder))
+        {
+            Directory.CreateDirectory(baseFolder);
+        }
+        
+        var filePath = Path.Combine(baseFolder, fileName);
+
+        if (action is not null && action.ToLower() == "add")
+        {
+            await using var stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.None, 4096,
+                useAsync: true);
+            await stream.WriteAsync(content, 0, content.Length, cancellationToken);
+        }
+        else
+        {
+            await File.WriteAllBytesAsync(filePath, content, cancellationToken);
+        }
+        
+        return filePath;
     }
 }

@@ -54,7 +54,7 @@ public class SongController(IMediator mediator) : Controller
                 return NotFound("File not found on S3!");
             Console.WriteLine(fileStream);
             
-            return File(fileStream, "audio/mpeg", enableRangeProcessing: true);
+            return Ok(GlobalResponse<string>.Success(data: fileStream));
         }
         catch (BusinessException ex)
         {
