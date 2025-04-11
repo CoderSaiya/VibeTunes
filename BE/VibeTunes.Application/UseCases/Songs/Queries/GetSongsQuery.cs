@@ -4,4 +4,4 @@ using VibeTunes.Domain.Specifications;
 
 namespace VibeTunes.Application.UseCases.Songs.Queries;
 
-public record GetSongsQuery(SongFilter Filter) : IRequest<IEnumerable<SongDto>>;
+public record GetSongsQuery(SongFilter? Filter) : IRequest<IEnumerable<SongDto>>;

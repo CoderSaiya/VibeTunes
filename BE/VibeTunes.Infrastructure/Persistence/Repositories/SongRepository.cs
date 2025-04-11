@@ -74,12 +74,14 @@ public class SongRepository(AppDbContext context) : ISongRepository
     public async Task<IEnumerable<Song>> GetSongByFilterAsync(SongFilter songFilter)
     {
         IQueryable<Song> query = context.Songs
+            .Include(s => s.Artist)
+            .Include(s => s.Album)
             .AsQueryable();
         
-        if (!string.IsNullOrWhiteSpace(songFilter.TitleContains))
+        if (!string.IsNullOrWhiteSpace(songFilter.TitleContains) || !string.IsNullOrEmpty(songFilter.TitleContains))
             query = query.Where(s => s.Title.Contains(songFilter.TitleContains));
         
-        if (!string.IsNullOrWhiteSpace(songFilter.Genre))
+        if (!string.IsNullOrWhiteSpace(songFilter.Genre) || !string.IsNullOrEmpty(songFilter.Genre))
         {
             var genres = songFilter.Genre.Split(",").Select(g => g.Trim()).ToList();
             query = query.Where(s => s.Genres.Any(genre => genres.Contains(genre.GenreName)));

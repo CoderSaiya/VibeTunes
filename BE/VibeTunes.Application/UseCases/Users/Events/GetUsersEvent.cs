@@ -15,16 +15,16 @@ public class GetUsersEvent(
         var filter = request.Filter ?? new UserFilter();
         var users = await userRepository.GetUsersByFilterAsync(filter);
         return users.Select(u => new UserDto(
-            u.Username, 
+            u.Username,
             u.Password,
-            u.Profile.Name!.FirstName, 
-            u.Profile.Name.LastName, 
-            u.Rank.ToString(), 
-            u.IsActive, 
-            u.IsBanned, 
-            u.Profile.Address!,
-            u.Profile.Gender.ToString() ?? null, 
-            u.Profile.Avatar!)
-        );
+            u?.Profile?.Name?.FirstName,
+            u?.Profile?.Name?.LastName,
+            u.Rank.ToString(),
+            u.IsActive,
+            u.IsBanned,
+            u?.Profile?.Address,
+            u?.Profile?.Gender?.ToString(),
+            u?.Profile?.Avatar
+        ));
     }
 }

@@ -20,7 +20,7 @@ public class GlobalResponse<T>
         StatusCode = statusCode;
     }
 
-    public static GlobalResponse<T> Success(T data, string message = "Request successful", int statusCode = 200)
+    public static GlobalResponse<T?> Success(T? data, string message = "Request successful", int statusCode = 200)
         => new(data, message, statusCode);
 
     public static GlobalResponse<T> Error(string message, int statusCode = 400)

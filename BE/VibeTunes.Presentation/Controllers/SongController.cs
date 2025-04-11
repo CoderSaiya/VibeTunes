@@ -66,4 +66,27 @@ public class SongController(IMediator mediator) : Controller
             return StatusCode(500, GlobalResponse<string>.Error("An error occurred. Please try again later.", 500));
         }
     }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetSongs([FromQuery] GetSongsQuery query)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        
+        try
+        {
+            var songs = await mediator.Send(query);
+            
+            return Ok(GlobalResponse<IEnumerable<SongDto>>.Success(data: songs));
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(GlobalResponse<string>.Error(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, GlobalResponse<string>.Error("An error occurred. Please try again later.", 500));
+        }
+    }
 }

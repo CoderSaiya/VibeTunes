@@ -7,6 +7,7 @@ namespace VibeTunes.Application.DTOs;
 public record SongDto(
     Guid Id,
     string? Title,
+    string? ArtistName,
     string? Genre,
     TimeSpan? Duration,
     string? FileUrl,
