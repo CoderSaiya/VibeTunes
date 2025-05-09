@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using VibeTunes.Application.DTOs;
+using VibeTunes.Application.Exceptions;
 using VibeTunes.Application.Interfaces;
 using VibeTunes.Domain.Common;
 using VibeTunes.Domain.Entities;
@@ -22,58 +23,74 @@ public class MomoGateway(
     
     public async Task<PaymentRes> CreatePaymentIntentAsync(PaymentReq request)
     {
-        var transactionId = Guid.NewGuid();
-        var rawHash = $"accessKey={_momoConfig.AccessKey}&" +
-                      $"amount={request.Amount * 100}&" +
-                      $"extraData=&ipnUrl={_momoConfig.NotifyUrl}&" +
-                      $"orderId={transactionId}&" +
-                      $"orderInfo=Thanh toán MoMo&" +
-                      $"partnerCode={_momoConfig.PartnerCode}&" +
-                      $"redirectUrl={_momoConfig.ReturnUrl}&" +
-                      $"requestId={Guid.NewGuid()}&" +
-                      $"requestType=captureWallet";
+        var orderId = Guid.NewGuid().ToString();
+        var requestId = Guid.NewGuid().ToString();
+        var amount = (long)(request.Amount);
+        
+        var rawHash = new StringBuilder()
+            .Append($"accessKey={_momoConfig.AccessKey}")
+            .Append($"&amount={amount}")
+            .Append("&extraData=")
+            .Append($"&ipnUrl={_momoConfig.NotifyUrl}")
+            .Append($"&orderId={orderId}")
+            .Append("&orderInfo=Thanh toán qua mã QR MoMo")
+            .Append($"&partnerCode={_momoConfig.PartnerCode}")
+            .Append($"&redirectUrl={_momoConfig.ReturnUrl}")
+            .Append($"&requestId={requestId}")
+            .Append("&requestType=captureWallet")
+            .ToString();
 
-        var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_momoConfig.SecretKey));
-        var signature = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(rawHash)));
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_momoConfig.SecretKey));
+        var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(rawHash));
+        var signature = BitConverter.ToString(hashBytes)
+            .Replace("-", string.Empty)
+            .ToLowerInvariant();
 
         var payload = new
         {
             partnerCode = _momoConfig.PartnerCode,
-            requestId = Guid.NewGuid().ToString(),
-            amount = request.Amount * 100,
-            transactionId,
-            orderInfo = "MoMo Payment",
+            partnerName = "Test",
+            storeId = "MomoTestStore",
+            requestId,
+            amount,
+            orderId,
+            orderInfo = "Thanh toán qua mã QR MoMo",
             redirectUrl = _momoConfig.ReturnUrl,
             ipnUrl = _momoConfig.NotifyUrl,
+            lang = "vi",
+            extraData = string.Empty,
             requestType = "captureWallet",
-            extraData = "",
             signature
         };
 
         using var client = new HttpClient();
         var response = await client.PostAsJsonAsync(_momoConfig.Endpoint, payload);
-        var jsonResponse = await response.Content.ReadFromJsonAsync<MomoResponse>();
+        var momoResp = await response.Content.ReadFromJsonAsync<MomoResponse>();
+        
+        if (momoResp == null)
+            throw new BusinessException("MoMo did not return any JSON.");
 
-        if (jsonResponse == null || jsonResponse.ResultCode != 0)
-            throw new Exception("Failed to create MoMo Payment");
+        if (momoResp.ResultCode != 0)
+            throw new BusinessException($"MoMo Error #{momoResp.ResultCode}: {momoResp.Message}");
         
         var transaction = new Transaction
         {
-            Id = transactionId,
+            Id = Guid.Parse(orderId),
             UserId = request.UserId,
-            Amount = (long)(request.Amount * 100),
+            SubscriptionId = Guid.Parse("fe2783f0-4073-4be1-ae6c-237beed44f7f"),
+            Amount = amount,
             Currency = request.Currency,
             PaymentMethod = "MoMo",
             Status = TransactionStatus.Pending,
         };
 
         await transactionRepository.CreateTransactionAsync(transaction);
-        
         await unitOfWork.CommitAsync();
 
         return new PaymentRes
         {
-            PaymentUrl = jsonResponse.PayUrl
+            PaymentUrl = momoResp.PayUrl,
+            TransactionId = orderId,
         };
     }
 

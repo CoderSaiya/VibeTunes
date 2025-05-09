@@ -42,7 +42,7 @@ public class AuthController(IMediator mediator) : Controller
         try
         {
             var result = await mediator.Send(command);
-            return Ok(GlobalResponse<TokenDto>.Success(new TokenDto(result.AccessToken, result.RefreshToken)));
+            return Ok(GlobalResponse<TokenDto>.Success(result));
         }
         catch (BusinessException ex)
         {
@@ -87,6 +87,94 @@ public class AuthController(IMediator mediator) : Controller
         {
             var result = await mediator.Send(command);
             return Ok(GlobalResponse<string>.Success(result));
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(GlobalResponse<string>.Error(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, GlobalResponse<string>.Error("An error occurred. Please try again later.", 500));
+        }
+    }
+    
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ForgotPasswordCommand command)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            await mediator.Send(command);
+            return Ok(GlobalResponse<string>.Success("Your code has been sent to your email address."));
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(GlobalResponse<string>.Error(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, GlobalResponse<string>.Error("An error occurred. Please try again later.", 500));
+        }
+    }
+    
+    [HttpPost("verify-code")]
+    public async Task<IActionResult> ChangePassword([FromBody] VerifyCodeCommand command)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            await mediator.Send(command);
+            return Ok(GlobalResponse<string>.Success("Verified!"));
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(GlobalResponse<string>.Error(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, GlobalResponse<string>.Error("An error occurred. Please try again later.", 500));
+        }
+    }
+    
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ResetPasswordCommand command)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            await mediator.Send(command);
+            return Ok(GlobalResponse<string>.Success("Password has been reset!"));
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(GlobalResponse<string>.Error(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, GlobalResponse<string>.Error("An error occurred. Please try again later.", 500));
+        }
+    }
+    
+    [HttpPost("google")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginCommand command)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            var result = await mediator.Send(command);
+            return Ok(GlobalResponse<TokenDto>.Success(result));
         }
         catch (BusinessException ex)
         {

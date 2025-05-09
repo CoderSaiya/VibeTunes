@@ -20,6 +20,8 @@ public class ProfileRepository(AppDbContext context) : IProfileRepository
     public async Task<Profile?> GetProfileByUserAsync(Guid userId)
     {
         return await context.Profiles
+            .Include(p => p.User)
+            .ThenInclude(u => u.FollowedArtists)
             .Where(p => p.UserId == userId)
             .FirstOrDefaultAsync();
     }

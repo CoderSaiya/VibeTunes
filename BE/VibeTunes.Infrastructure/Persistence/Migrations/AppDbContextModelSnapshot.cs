@@ -22,6 +22,21 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ArtistFollower", b =>
+                {
+                    b.Property<Guid>("ArtistId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ArtistId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ArtistFollower", (string)null);
+                });
+
             modelBuilder.Entity("PlaylistSong", b =>
                 {
                     b.Property<Guid>("PlaylistsId")
@@ -334,6 +349,31 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     b.ToTable("Songs");
                 });
 
+            modelBuilder.Entity("VibeTunes.Domain.Entities.SongLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SongId");
+
+                    b.ToTable("SongLogs");
+                });
+
             modelBuilder.Entity("VibeTunes.Domain.Entities.Subscription", b =>
                 {
                     b.Property<Guid>("Id")
@@ -457,6 +497,13 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("VibeTunes.Domain.Entities.Admin", b =>
+                {
+                    b.HasBaseType("VibeTunes.Domain.Entities.User");
+
+                    b.HasDiscriminator().HasValue("Admin");
+                });
+
             modelBuilder.Entity("VibeTunes.Domain.Entities.Artist", b =>
                 {
                     b.HasBaseType("VibeTunes.Domain.Entities.User");
@@ -472,6 +519,23 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     b.HasDiscriminator().HasValue("Artist");
                 });
 
+            modelBuilder.Entity("ArtistFollower", b =>
+                {
+                    b.HasOne("VibeTunes.Domain.Entities.Artist", null)
+                        .WithMany()
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_ArtistFollower_Artist_ArtistId");
+
+                    b.HasOne("VibeTunes.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_ArtistFollower_User_UserId");
+                });
+
             modelBuilder.Entity("PlaylistSong", b =>
                 {
                     b.HasOne("VibeTunes.Domain.Entities.Playlist", null)
@@ -483,7 +547,7 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     b.HasOne("VibeTunes.Domain.Entities.Song", null)
                         .WithMany()
                         .HasForeignKey("SongsId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -644,7 +708,8 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("VibeTunes.Domain.Entities.Album", "Album")
                         .WithMany("SongsList")
-                        .HasForeignKey("AlbumId");
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("VibeTunes.Domain.Entities.Artist", "Artist")
                         .WithMany("Songs")
@@ -655,6 +720,17 @@ namespace VibeTunes.Infrastructure.Persistence.Migrations
                     b.Navigation("Album");
 
                     b.Navigation("Artist");
+                });
+
+            modelBuilder.Entity("VibeTunes.Domain.Entities.SongLog", b =>
+                {
+                    b.HasOne("VibeTunes.Domain.Entities.Song", "Song")
+                        .WithMany()
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Song");
                 });
 
             modelBuilder.Entity("VibeTunes.Domain.Entities.Transaction", b =>

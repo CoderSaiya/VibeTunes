@@ -42,7 +42,7 @@ public class StripeGateway(
         {
             Id = transactionId,
             UserId = request.UserId,
-            SubscriptionId = request.SubscriptionId,
+            SubscriptionId = Guid.Parse("fe2783f0-4073-4be1-ae6c-237beed44f7f"),
             Amount = (long)(request.Amount * 100),
             Currency = request.Currency.ToLower(),
             PaymentMethod = request.PaymentMethod.ToLower(),

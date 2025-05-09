@@ -13,5 +13,5 @@ public sealed class Profile : BaseEntity
     public Name? Name { get; set; }
     public Address? Address { get; set; }
     public Gender? Gender { get; set; }
-    public string? Avatar { get; set; } = "/img/logo.png";
+    public string? Avatar { get; set; } = "https://i.pinimg.com/236x/23/bb/df/23bbdf32fbf463583ecf1b078d5c13e8.jpg";
 }

@@ -10,7 +10,7 @@ namespace VibeTunes.Presentation.Controllers;
 [Route("api/[controller]")]
 public class SubscriptionController(IMediator mediator) : Controller
 {
-    [HttpGet()]
+    [HttpGet]
     public async Task<IActionResult> GetSubscriptions([FromQuery] GetSubscriptionsQuery query)
     {
         if (!ModelState.IsValid)

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 using VibeTunes.Domain.ValueObjects;
 
 namespace VibeTunes.Application.UseCases.Users.Commands;
@@ -9,5 +10,5 @@ public record UpdateProfileCommand(
     string? LastName,
     string? Address,
     string? Gender,
-    string? Avatar
-    ) : IRequest<Unit>;
+    IFormFile? Avatar
+    ) : IRequest<Guid>;

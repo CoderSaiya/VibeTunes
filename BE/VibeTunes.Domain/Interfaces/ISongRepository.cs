@@ -14,6 +14,8 @@ public interface ISongRepository
     public Task<IEnumerable<Song>> GetSongByAlbumAsync(Guid albumId);
     public Task<IEnumerable<Song>> GetSongByPlaylistAsync(Guid playlistId);
     public Task<Song?> GetSongByIdAsync(Guid songId);
+    Task<IEnumerable<Song>> GetSongsByIdsAsync(List<Guid> songIds);
+    Task<IEnumerable<Song>> GetPopularSongsByArtistAsync(Guid artistId);
     public Task<IEnumerable<Song>> GetSongByFilterAsync(SongFilter songFilter);
     public Task AddSongAsync(Song song);
     public Task UpdateSongAsync(Song song); 

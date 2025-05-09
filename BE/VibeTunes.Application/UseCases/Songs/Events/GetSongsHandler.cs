@@ -30,11 +30,13 @@ public class GetSongsHandler(
                 s.Title, 
                 s.Artist.StageName,
                 genreString,
-                s.Duration, 
+                s.Duration.ToString(@"mm\:ss"), 
                 audioUrl,
                 imageUrl,
                 s.Streams, 
-                s.Status
+                s.Status.ToString(),
+                s.Album?.Title ?? string.Empty,
+                s.ReleaseDate.ToString("dd/MM/yyyy")
             );
         });
         

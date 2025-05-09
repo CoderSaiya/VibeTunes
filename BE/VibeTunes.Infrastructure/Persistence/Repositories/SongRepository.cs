@@ -12,7 +12,11 @@ public class SongRepository(AppDbContext context) : ISongRepository
 {
     public async Task<IEnumerable<Song>> GetAllSongsAsync()
     {
-        return await context.Songs.ToListAsync();
+        return await context.Songs
+            .Include(s => s.Artist)
+            .Include(s => s.Album)
+            .Include(s => s.Genres)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Song>> GetAllBannedSongsAsync()
@@ -68,7 +72,25 @@ public class SongRepository(AppDbContext context) : ISongRepository
     {
         return await context.Songs
             .Where(s => s.Id == songId)
+            .Include(s => s.Genres)
+            .Include(s => s.Artist)
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<Song>> GetSongsByIdsAsync(List<Guid> songIds)
+    {
+        return await context.Songs
+            .Where(song => songIds.Contains(song.Id))
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Song>> GetPopularSongsByArtistAsync(Guid artistId)
+    {
+        return await context.Songs
+            .OrderByDescending(s => s.Streams)
+            .Where(s => s.ArtistId == artistId)
+            .Take(5)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Song>> GetSongByFilterAsync(SongFilter songFilter)
@@ -76,12 +98,13 @@ public class SongRepository(AppDbContext context) : ISongRepository
         IQueryable<Song> query = context.Songs
             .Include(s => s.Artist)
             .Include(s => s.Album)
+            .Include(s => s.Genres)
             .AsQueryable();
         
-        if (!string.IsNullOrWhiteSpace(songFilter.TitleContains) || !string.IsNullOrEmpty(songFilter.TitleContains))
+        if (!string.IsNullOrWhiteSpace(songFilter.TitleContains))
             query = query.Where(s => s.Title.Contains(songFilter.TitleContains));
         
-        if (!string.IsNullOrWhiteSpace(songFilter.Genre) || !string.IsNullOrEmpty(songFilter.Genre))
+        if (!string.IsNullOrWhiteSpace(songFilter.Genre))
         {
             var genres = songFilter.Genre.Split(",").Select(g => g.Trim()).ToList();
             query = query.Where(s => s.Genres.Any(genre => genres.Contains(genre.GenreName)));
@@ -120,13 +143,9 @@ public class SongRepository(AppDbContext context) : ISongRepository
         context.Entry(existingSong).CurrentValues.SetValues(song);
     }
 
-    public async Task DeleteSongAsync(Song song)
+    public Task DeleteSongAsync(Song song)
     {
-        var existingSong = await context.Songs.FindAsync(song.Id);
-        if (existingSong == null)
-        {
-            throw new KeyNotFoundException();
-        }
-        context.Songs.Remove(existingSong);
+        context.Songs.Remove(song);
+        return Task.CompletedTask;
     }
 }

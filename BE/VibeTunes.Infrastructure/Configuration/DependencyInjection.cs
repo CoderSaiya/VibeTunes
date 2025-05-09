@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VibeTunes.Infrastructure.Persistence.Data;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
 using VibeTunes.Application.Interfaces;
 using VibeTunes.Domain.Interfaces;
 using VibeTunes.Infrastructure.Factories;
@@ -43,6 +44,8 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<ISongRepository, SongRepository>();
+        services.AddScoped<ISongLogRepository, SongLogRepository>();
+        services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<INotificationService, NotificationService>();
@@ -56,6 +59,7 @@ public static class DependencyInjection
         
         services.AddSingleton<IBackgroundTaskQueue>(new BackgroundTaskQueue(capacity: 100));
         services.AddHostedService<QueuedHostedService>();
+        services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
         
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         

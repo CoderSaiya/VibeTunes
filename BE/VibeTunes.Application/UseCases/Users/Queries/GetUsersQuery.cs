@@ -4,4 +4,4 @@ using VibeTunes.Domain.Specifications;
 
 namespace VibeTunes.Application.UseCases.Users.Queries;
 
-public sealed record GetUsersQuery(UserFilter? Filter) : IRequest<IEnumerable<UserDto>>;
+public sealed record GetUsersQuery(UserFilter? Filter, bool IsArtist = true) : IRequest<IEnumerable<UserDto>>;

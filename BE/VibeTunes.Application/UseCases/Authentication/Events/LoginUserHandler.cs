@@ -22,6 +22,8 @@ public class LoginUserHandler(
         if (user == null)
             throw new BusinessException("User with this email not exists.");
         
+        Console.WriteLine("ABC2" + user.GetType());
+        
         // check password
         if (!authService.VerifyPassword(request.Password, user.Password))
             throw new BusinessException("Invalid password.");

@@ -4,6 +4,7 @@ using VibeTunes.Domain.Interfaces;
 using VibeTunes.Domain.Specifications;
 using VibeTunes.Infrastructure.Persistence.Data;
 using System.Linq.Dynamic.Core;
+using VibeTunes.Domain.ValueObjects;
 
 namespace VibeTunes.Infrastructure.Persistence.Repositories;
 
@@ -16,7 +17,10 @@ public class AlbumRepository(AppDbContext context) : IAlbumRepository
 
     public async Task<Album?> GetAlbumByIdAsync(Guid id)
     {
-        return await context.Albums.FindAsync(id);
+        return await context.Albums
+            .Include(a => a.Artist)
+            .Where(a => a.Id == id)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Album>> GetAlbumsByArtistIdAsync(Guid artistId)
@@ -39,6 +43,7 @@ public class AlbumRepository(AppDbContext context) : IAlbumRepository
             .Include(a => a.Artist)
             .ThenInclude(a => a.Profile)
             .Include(a => a.SongsList)
+            .ThenInclude(s => s.Artist)
             .AsQueryable();
         
         if (!string.IsNullOrEmpty(filter.Keyword))
@@ -91,6 +96,22 @@ public class AlbumRepository(AppDbContext context) : IAlbumRepository
         query = query.Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize);
         
         return await query.ToListAsync();
+    }
+    
+    public async Task<IEnumerable<GenreCount>> GetTopGenresAsync(Guid albumId, int top = 1)
+    {
+        return await context.Songs
+            .AsNoTracking()
+            .Where(s => s.AlbumId == albumId)
+            .SelectMany(s => s.Genres)
+            .GroupBy(g => g.GenreName)
+            .Select(grp => new GenreCount {
+                GenreName = grp.Key,
+                Count = grp.Count()
+            })
+            .OrderByDescending(g => g.Count)
+            .Take(top)
+            .ToListAsync();
     }
 
     public async Task<bool> CreateAlbumAsync(Album album)

@@ -40,8 +40,27 @@ public class CreateSongHandler(
         
         // upload audio & image
         var audioKey = $"audios/{existingArtist.Id}/{Guid.NewGuid()}_{request.Audio.FileName}";
+        TimeSpan duration;
         await using (var audioStream = request.Audio.OpenReadStream())
         {
+            // Tạo memory stream để xử lý
+            var memoryStream = new MemoryStream();
+            await audioStream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0; // Reset stream position
+
+            try
+            {
+                // Đọc metadata audio
+                var file = TagLib.File.Create(new StreamFileAbstraction(request.Audio.FileName, memoryStream, null));
+                duration = file.Properties.Duration;
+            }
+            catch (Exception ex)
+            {
+                throw new BusinessException("Invalid audio file format");
+            }
+
+            // Upload lại từ đầu stream
+            memoryStream.Position = 0;
             await fileService.UploadFileAsync(audioStream, audioKey, cancellationToken);
         }
         
@@ -61,6 +80,7 @@ public class CreateSongHandler(
             FileUrl = audioKey,
             ReleaseDate = request.ReleaseDate,
             Genres = existingGenres,
+            Duration = duration
         };
         
         await songRepository.AddSongAsync(newSong);

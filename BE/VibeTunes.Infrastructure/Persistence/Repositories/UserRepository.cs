@@ -19,7 +19,21 @@ public class UserRepository(AppDbContext context) : IUserRepository
 
     public async Task<User?> GetByIdAsync(Guid id)
     {
-        return await _context.Users.FindAsync(id);
+        return await _context.Users
+            .Include(u => u.Profile)
+            .Where(u => u.Id == id)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<Artist?> GetArtistByIdAsync(Guid id)
+    {
+        return await _context.Artists
+            .Include(a => a.Profile)
+            .Include(a => a.Songs)
+            .Include(a => a.Albums)
+            .Include(a => a.Followers)
+            .Where(a => a.Id == id)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<User?> GetByEmailAsync(string email)
@@ -55,11 +69,16 @@ public class UserRepository(AppDbContext context) : IUserRepository
             .ToListAsync();
     }
     
-    public async Task<IEnumerable<User>> GetUsersByFilterAsync(UserFilter userFilter)
+    public async Task<IEnumerable<User>> GetUsersByFilterAsync(UserFilter userFilter, bool isArtist = true)
     {
         IQueryable<User> query = context.Users
             .Include(u => u.Profile)
             .AsQueryable();
+
+        if (isArtist)
+        {
+            query = query.OfType<Artist>();
+        }
         
         if (!string.IsNullOrEmpty(userFilter.Name))
         {
@@ -108,8 +127,16 @@ public class UserRepository(AppDbContext context) : IUserRepository
         {
             query = query.Where(u => u.Profile.Gender == userFilter.Gender);
         }
-        
-        query = query.Where(u => u.IsActive == userFilter.IsActive && u.IsBanned == userFilter.IsBanned);
+
+        if (userFilter.IsBanned.HasValue)
+        {
+            query = query.Where(u => u.IsBanned == userFilter.IsBanned);
+        }
+
+        if (userFilter.IsActive.HasValue)
+        {
+            query = query.Where(u => u.IsActive == userFilter.IsActive);
+        }
         
         string orderByString = $"{userFilter.SortBy} {userFilter.SortDirection}";
         query = query.OrderBy(orderByString);
@@ -117,6 +144,90 @@ public class UserRepository(AppDbContext context) : IUserRepository
         query = query.Skip((userFilter.PageNumber - 1) * userFilter.PageSize).Take(userFilter.PageSize);
 
         return await query.ToListAsync();
+    }
+
+    public async Task<IEnumerable<Artist>> GetHotArtistAsync(int size)
+    {
+        const double followersWeight = 0.5;
+        const double streamsWeight = 0.4;
+        const double albumsWeight = 0.3;
+        const double songsWeight = 0.2;
+        
+        return await context.Artists
+            .Include(a => a.Songs)
+            .Include(a => a.Albums)
+            .Include(a => a.Followers)
+            .Include(a => a.Profile)
+            .Select(a => new
+            {
+                Artist = a,
+                Score = 
+                    a.Followers.Count * followersWeight +
+                    a.Songs.Sum(s => s.Streams) * streamsWeight +
+                    a.Albums.Count * albumsWeight +
+                    a.Songs.Count * songsWeight
+            })
+            .OrderByDescending(x => x.Score)
+            .Select(x => x.Artist)
+            .Take(size)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<GenreCount>> GetTopGenresAsync(Guid artistId, int top = 1)
+    {
+        return await context.Songs
+            .AsNoTracking()
+            .Where(s => s.ArtistId == artistId)
+            .SelectMany(s => s.Genres)
+            .GroupBy(g => g.GenreName)
+            .Select(grp => new GenreCount {
+                GenreName = grp.Key,
+                Count = grp.Count()
+            })
+            .OrderByDescending(g => g.Count)
+            .Take(top)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<DateCount>> GetUserAndArtistCountsByMonthAsync(int? month = null, int? year = null)
+    {
+        var now = DateTime.UtcNow;
+        var currentYear = year ?? now.Year;
+        var currentMonth = month ?? now.Month;
+        
+        var startOfMonth = new DateTime(currentYear, currentMonth, 1);
+        int lastDay = DateTime.DaysInMonth(currentYear, currentMonth);
+        var endOfPeriod = (year == DateTime.UtcNow.Year && month == DateTime.UtcNow.Month)
+            ? DateTime.UtcNow.Date
+            : new DateTime(currentYear, currentMonth, lastDay);
+        
+        var thresholds = new List<DateTime>();
+        for (int day = 1; day <= lastDay; day += 5)
+        {
+            thresholds.Add(new DateTime(currentYear, currentMonth, day));
+        }
+        
+        if (!thresholds.Contains(endOfPeriod))
+            thresholds.Add(endOfPeriod);
+        
+        var results = new List<DateCount>();
+        foreach (var threshold in thresholds)
+        {
+            var userCount = await _context.Users
+                .CountAsync(u => u.CreatedDate.Date <= threshold);
+            
+            var artistCount = await _context.Users
+                .OfType<Artist>()
+                .CountAsync(a => a.CreatedDate.Date <= threshold);
+
+            results.Add(new DateCount
+            {
+                Name = threshold.ToString("MMM d"),
+                TotalUsers = userCount,
+                TotalArtists = artistCount
+            });
+        }
+        return results;
     }
 
     public async Task<bool> UpdateUserAsync(User user)

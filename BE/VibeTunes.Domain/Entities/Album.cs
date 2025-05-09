@@ -7,7 +7,7 @@ public sealed class Album : BaseEntity
 {
     public Guid ArtistId { get; set; }
     [ForeignKey("ArtistId")]
-    public required Artist Artist { get; set; }
+    public Artist Artist { get; set; }
     
     public string Title {get; set;}
     public DateOnly ReleaseDate {get; set;}

@@ -7,6 +7,7 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Artist> Artists { get; set; }
+    public DbSet<Admin> Admins { get; set; }
     public DbSet<Album> Albums { get; set; }
     public DbSet<Song> Songs { get; set; }
     public DbSet<Genre> Genres { get; set; }
@@ -17,11 +18,20 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Subscription> Subscriptions { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Profile> Profiles { get; set; }
+    public DbSet<SongLog> SongLogs { get; set; }
     
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasDiscriminator<string>("Discriminator")
+                .HasValue<User>("User")
+                .HasValue<Admin>("Admin")
+                .HasValue<Artist>("Artist");
+        });
+        
         modelBuilder.Entity<Subscription>()
             .Property(s => s.Tags)
             .HasConversion(
@@ -48,11 +58,13 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
                 j => j.HasOne<Genre>()
                     .WithMany()
                     .HasForeignKey("GenreId")
-                    .HasConstraintName("FK_SongGenres_Genres_GenreId"),
+                    .HasConstraintName("FK_SongGenres_Genres_GenreId")
+                    .OnDelete(DeleteBehavior.Cascade),
                 j => j.HasOne<Song>()
                     .WithMany()
                     .HasForeignKey("SongId")
-                    .HasConstraintName("FK_SongGenres_Songs_SongId"),
+                    .HasConstraintName("FK_SongGenres_Songs_SongId")
+                    .OnDelete(DeleteBehavior.Cascade),
                 j =>
                 {
                     j.HasKey("SongId", "GenreId");
@@ -117,7 +129,7 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
                 j => j.HasOne<Song>()
                     .WithMany()
                     .HasForeignKey("SongsId")
-                    .OnDelete(DeleteBehavior.Restrict),
+                    .OnDelete(DeleteBehavior.Cascade),
                 j => j.HasOne<Playlist>()
                     .WithMany()
                     .HasForeignKey("PlaylistsId")
@@ -126,6 +138,45 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
                 {
                     j.HasKey("PlaylistsId", "SongsId");
                     j.ToTable("PlaylistSong");
+                });
+        
+        modelBuilder.Entity<SongLog>()
+            .HasOne(sl => sl.Song)
+            .WithMany()
+            .HasForeignKey(sl => sl.SongId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Song>()
+            .HasOne(s => s.Album)
+            .WithMany(a => a.SongsList)
+            .HasForeignKey(s => s.AlbumId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Song>()
+            .HasOne(s => s.Artist)
+            .WithMany(a => a.Songs)
+            .HasForeignKey(s => s.ArtistId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<User>()
+            .HasMany(s => s.FollowedArtists)
+            .WithMany(g => g.Followers)
+            .UsingEntity<Dictionary<string, object>>(
+                "ArtistFollower",
+                j => j.HasOne<Artist>()
+                    .WithMany()
+                    .HasForeignKey("ArtistId")
+                    .HasConstraintName("FK_ArtistFollower_Artist_ArtistId")
+                    .OnDelete(DeleteBehavior.Restrict),
+                j => j.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .HasConstraintName("FK_ArtistFollower_User_UserId")
+                    .OnDelete(DeleteBehavior.Restrict),
+                j =>
+                {
+                    j.HasKey("ArtistId", "UserId");
+                    j.ToTable("ArtistFollower");
                 });
         
         base.OnModelCreating(modelBuilder);

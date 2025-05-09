@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using VibeTunes.Application.Exceptions;
+using VibeTunes.Application.Interfaces;
 using VibeTunes.Application.UseCases.Users.Commands;
 using VibeTunes.Domain.Interfaces;
 using VibeTunes.Domain.ValueObjects;
@@ -8,10 +9,11 @@ namespace VibeTunes.Application.UseCases.Users.Events;
 
 public class UpdateProfileHandler(
     IUserRepository userRepository, 
+    IFileService fileService,
     IUnitOfWork unitOfWork
-    ) : IRequestHandler<UpdateProfileCommand, Unit>
+    ) : IRequestHandler<UpdateProfileCommand, Guid>
 {
-    public async Task<Unit> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
     {
         var user = await userRepository.GetByIdAsync(request.UserId);
         if (user is null) 
@@ -29,11 +31,24 @@ public class UpdateProfileHandler(
         if (!string.IsNullOrWhiteSpace(request.Gender) && Enum.TryParse<Gender>(request.Gender, true, out var gender))
             profile.Gender = gender;
 
-        if (!string.IsNullOrWhiteSpace(request.Avatar))
-            profile.Avatar = request.Avatar;
+        if (request.Avatar is not null)
+        {
+            var avatar = profile.Avatar;
+            
+            var isHttpUrl = avatar.StartsWith("http");
+            if (!isHttpUrl) await fileService.DeleteFileAsync(avatar, cancellationToken);
+            
+            var key = $"avatars/{user.Id}/{Guid.NewGuid()}_{request.Avatar.FileName}";
+            await using (var stream = request.Avatar.OpenReadStream())
+            {
+                await fileService.UploadFileAsync(stream, key, cancellationToken);
+            }
+            
+            profile.Avatar = key;
+        }
         
         await unitOfWork.CommitAsync();
         
-        return Unit.Value;
+        return profile.UserId;
     }
 }

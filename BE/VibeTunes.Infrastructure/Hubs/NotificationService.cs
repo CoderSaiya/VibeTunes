@@ -8,7 +8,8 @@ namespace VibeTunes.Infrastructure.Hubs;
 public class NotificationService(
     IHubContext<NotificationHub> hubContext,
     IUserRepository userRepository,
-    INotificationRepository notificationRepository
+    INotificationRepository notificationRepository,
+    IUnitOfWork unitOfWork
 ) : INotificationService
 {
     public async Task SendNotification(Guid senderId, Guid recipientId, string message)
@@ -25,9 +26,13 @@ public class NotificationService(
         };
 
         await notificationRepository.CreateNotificationAsync(notification);
+        
+        await unitOfWork.CommitAsync();
 
         // Send Notify by SignalR
-        await hubContext.Clients.User(recipientId.ToString()).SendAsync("ReceiveNotification", new
+        await hubContext.Clients
+            .User(recipientId.ToString())
+            .SendAsync("ReceiveNotification", new
         {
             id = notification.Id,
             message = notification.Message,

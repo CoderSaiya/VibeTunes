@@ -23,12 +23,16 @@ public class PlaylistRepository(AppDbContext context) : IPlaylistRepository
 
     public async Task<Playlist?> GetPlaylistByIdAsync(Guid playlistId)
     {
-        return await context.Playlists.FindAsync(playlistId);
+        return await context.Playlists
+            .Include(p => p.Songs)
+            .Where(p => p.Id == playlistId)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Playlist>> GetPlaylistsByUserIdAsync(Guid userId)
     {
         return await context.Playlists
+            .Include(p => p.Songs)
             .Where(p => p.UserId == userId)
             .ToListAsync();
     }
@@ -42,11 +46,15 @@ public class PlaylistRepository(AppDbContext context) : IPlaylistRepository
 
     public async Task<IEnumerable<Playlist>> GetPlaylistsByFilterAsync(PlaylistFilter filter)
     {
-        IQueryable<Playlist> query = context.Playlists.AsQueryable();
+        IQueryable<Playlist> query = context.Playlists
+            .Include(p => p.Songs)
+            .AsQueryable();
         
         if (!string.IsNullOrWhiteSpace(filter.Keyword))
             query = query.Where(s => EF.Functions.Like(s.Name, $"%{filter.Keyword}%") ||
                                             EF.Functions.Like(s.Description, $"%{filter.Keyword}%"));
+
+        query = query.Where(p => p.IsPublic == filter.IsPublic);
         
         string orderByString = $"{filter.SortBy} {filter.SortDirection}";
         query = query.OrderBy(orderByString);
@@ -68,7 +76,66 @@ public class PlaylistRepository(AppDbContext context) : IPlaylistRepository
             return false;
         }
     }
+    
+    public async Task<bool> AddSongsAsync(Guid playlistId, List<Guid> songIds)
+    {
+        try
+        {
+            var playlist = await context.Playlists
+                .Include(p => p.Songs)
+                .FirstOrDefaultAsync(p => p.Id == playlistId);
+            
+            var songsToAdd = await context.Songs
+                .Where(s => songIds.Contains(s.Id))
+                .ToListAsync();
 
+            if (playlist is null || !songsToAdd.Any())
+                return false;
+            
+            foreach (var song in songsToAdd)
+            {
+                if (playlist.Songs.All(existing => existing.Id != song.Id))
+                {
+                    playlist.Songs.Add(song);
+                }
+            }
+            
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    public async Task<bool> RemoveSongsAsync(Guid playlistId, List<Guid> songIds)
+    {
+        try
+        {
+            var playlist = await context.Playlists
+                .Include(p => p.Songs)
+                .FirstOrDefaultAsync(p => p.Id == playlistId);
+            
+            var songsToRemove = await context.Songs
+                .Where(s => songIds.Contains(s.Id))
+                .ToListAsync();
+
+            if (playlist is null || !songsToRemove.Any())
+                return false;
+            
+            foreach (var song in songsToRemove)
+            {
+                playlist.Songs.Remove(song);
+            }
+            
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
     public async Task<bool> UpdatePlaylistAsync(Playlist playlist)
     {
         var existingPlaylist = await context.Playlists.FindAsync(playlist.Id);

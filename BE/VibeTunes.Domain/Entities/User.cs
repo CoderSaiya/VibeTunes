@@ -1,4 +1,5 @@
-﻿using VibeTunes.Domain.Common;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using VibeTunes.Domain.Common;
 using VibeTunes.Domain.ValueObjects;
 
 namespace VibeTunes.Domain.Entities;
@@ -21,6 +22,7 @@ public class User : BaseEntity
     public ICollection<Notification> NotificationsSent { get; set; } = new List<Notification>();
     public ICollection<Notification> NotificationsReceived { get; set; } = new List<Notification>();
     public ICollection<Playlist> Playlists { get; set; } = new List<Playlist>();
+    public ICollection<Artist> FollowedArtists { get; set; } = new List<Artist>();
     
     protected User() {}
 

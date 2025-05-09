@@ -9,6 +9,7 @@ public class Artist : User
     
     public ICollection<Album> Albums { get; set; } = new List<Album>();
     public ICollection<Song> Songs { get; set; } = new List<Song>();
+    public ICollection<User> Followers { get; set; } = new List<User>();
 
     private Artist() { }
 

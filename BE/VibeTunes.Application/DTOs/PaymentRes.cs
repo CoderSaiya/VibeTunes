@@ -4,4 +4,5 @@ public class PaymentRes
 {
     public string? ClientSecret { get; set; }
     public string? PaymentUrl { get; set; }
+    public string? TransactionId { get; set; }
 }

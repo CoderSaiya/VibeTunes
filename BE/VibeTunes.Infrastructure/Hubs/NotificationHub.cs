@@ -3,7 +3,7 @@ using VibeTunes.Application.Interfaces;
 
 namespace VibeTunes.Infrastructure.Hubs;
 
-public class NotificationHub(INotificationService notificationService) : Hub
+public class NotificationHub : Hub
 {
     private static readonly Dictionary<string, string> UserConnections = new();
     
@@ -25,20 +25,5 @@ public class NotificationHub(INotificationService notificationService) : Hub
             UserConnections.Remove(userId);
         }
         return base.OnDisconnectedAsync(exception);
-    }
-    
-    public async Task SendNotification(Guid senderId, Guid recipientId, string message)
-    {
-        await notificationService.SendNotification(senderId, recipientId, message);
-        
-        if (UserConnections.TryGetValue(recipientId.ToString(), out var recipientConnectionId))
-        {
-            await Clients.Client(recipientConnectionId).SendAsync("ReceiveNotification", new
-            {
-                senderId,
-                message,
-                timestamp = DateTime.UtcNow
-            });
-        }
     }
 }

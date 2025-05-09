@@ -6,5 +6,5 @@ public class PaymentReq
     public string Currency { get; set; }
     public string PaymentMethod { get; set; }
     public Guid UserId { get; set; }
-    public Guid SubscriptionId { get; set; }
+    // public Guid SubscriptionId { get; set; }
 }
