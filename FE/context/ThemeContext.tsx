@@ -26,6 +26,7 @@ const themes = {
         tabBarInactive: "#8E8E93",
         playerBackground: "#1A1A1A",
         playerText: "#FFFFFF",
+        error: "#FF0000",
     },
     dark: {
         background: "#000000",
@@ -39,6 +40,7 @@ const themes = {
         tabBarInactive: "#8E8E93",
         playerBackground: "#1A1A1A",
         playerText: "#FFFFFF",
+        error: "#FF0000",
     },
 }
 

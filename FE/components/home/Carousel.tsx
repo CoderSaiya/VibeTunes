@@ -1,81 +1,127 @@
 "use client"
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { View, Text as RNText, StyleSheet, FlatList, Image, Dimensions, TouchableOpacity, Animated } from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import { useTheme } from "@/context/ThemeContext"
+import React, {memo} from "react"
+import {useState, useRef, useEffect} from "react"
+import {View, Text as RNText, StyleSheet, FlatList, Image, Dimensions, TouchableOpacity, Animated} from "react-native"
+import {Ionicons} from "@expo/vector-icons"
+import {useTheme} from "@/context/ThemeContext"
+import {Playlist} from "@/types/playlist";
 
 // Rename Text to avoid conflicts
 const Text = RNText
 
-const { width } = Dimensions.get("window")
+const {width} = Dimensions.get("window")
 const ITEM_WIDTH = width - 40
 
-interface CarouselItem {
-    id: string
-    title: string
-    subtitle: string
-    image: string
+interface AnimatedFlatListProps {
+    renderItem?: ({item}: { item: Playlist }) => React.JSX.Element
 }
+
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList)
 
 interface CarouselProps {
-    data: CarouselItem[]
-    onItemPress: (item: CarouselItem) => void
+    data: Playlist[]
+    onItemPress: (item: Playlist) => void
 }
 
-const Carousel: React.FC<CarouselProps> = ({ data, onItemPress }) => {
-    const { colors } = useTheme()
+const CarouselItem = memo(({item, onPress}: { item: Playlist; onPress: () => void }) => {
+    return (
+        <TouchableOpacity style={styles.itemContainer} onPress={onPress} activeOpacity={0.9}>
+            <Image source={{uri: item.coverImageUrl}} style={styles.image}/>
+            <View style={styles.overlay}>
+                <Text style={styles.title}>{item.name}</Text>
+                <View style={styles.subtitleContainer}>
+                    <Ionicons name="musical-notes" size={16} color="#FFFFFF"/>
+                    <Text style={styles.subtitle}>{item.songsList?.length ?? 0} Songs</Text>
+                </View>
+                <TouchableOpacity style={styles.arrowButton}>
+                    <Ionicons name="arrow-forward" size={24} color="#FFFFFF"/>
+                </TouchableOpacity>
+            </View>
+        </TouchableOpacity>
+    )
+})
+
+CarouselItem.displayName = 'CarouselItem'
+
+const Carousel: React.FC<CarouselProps> = ({data, onItemPress}) => {
+    if (!data?.length) return null;
+
+    const {colors} = useTheme()
     const [activeIndex, setActiveIndex] = useState(0)
     const flatListRef = useRef<FlatList>(null)
     const scrollX = useRef(new Animated.Value(0)).current
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (activeIndex === data.length - 1) {
-                flatListRef.current?.scrollToIndex({
-                    index: 0,
-                    animated: true,
-                })
-            } else {
-                flatListRef.current?.scrollToIndex({
-                    index: activeIndex + 1,
-                    animated: true,
-                })
-            }
-        }, 3000)
+    const handleItemPress = useRef((item: Playlist) => {
+        onItemPress(item)
+    }).current
 
-        return () => clearInterval(interval)
+    useEffect(() => {
+        let intervalId: NodeJS.Timeout | null = null;
+
+        // Only set up auto-scrolling if we have more than one item
+        if (data.length > 1) {
+            intervalId = setInterval(() => {
+                const nextIndex = activeIndex === data.length - 1 ? 0 : activeIndex + 1;
+
+                if (flatListRef.current) {
+                    flatListRef.current.scrollToIndex({
+                        index: nextIndex,
+                        animated: true,
+                    })
+                }
+            }, 3000)
+        }
+
+        return () => {
+            if (intervalId) clearInterval(intervalId)
+        }
     }, [activeIndex, data.length])
 
-    const renderItem = ({ item }: { item: CarouselItem }) => {
+    const renderItem = ({item}: { item: Playlist }) => {
         return (
-            <TouchableOpacity style={styles.itemContainer} onPress={() => onItemPress(item)} activeOpacity={0.9}>
-                <Image source={{ uri: item.image }} style={styles.image} />
-                <View style={styles.overlay}>
-                    <Text style={styles.title}>{item.title}</Text>
-                    <View style={styles.subtitleContainer}>
-                        <Ionicons name="musical-notes" size={16} color="#FFFFFF" />
-                        <Text style={styles.subtitle}>{item.subtitle}</Text>
-                    </View>
-                    <TouchableOpacity style={styles.arrowButton}>
-                        <Ionicons name="arrow-forward" size={24} color="#FFFFFF" />
-                    </TouchableOpacity>
-                </View>
-            </TouchableOpacity>
+            <CarouselItem
+                item={item}
+                onPress={() => handleItemPress(item)}
+            />
         )
     }
 
-    const handleScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false })
+    const getItemLayout = (_: any, index: number) => ({
+        length: ITEM_WIDTH,
+        offset: ITEM_WIDTH * index,
+        index,
+    })
+
+    const handleScroll = Animated.event(
+        [{nativeEvent: {contentOffset: {x: scrollX}}}],
+        {useNativeDriver: true}
+    )
 
     const handleMomentumScrollEnd = (event: any) => {
         const index = Math.round(event.nativeEvent.contentOffset.x / ITEM_WIDTH)
         setActiveIndex(index)
     }
 
+    const onScrollToIndexFailed = (info: {
+        index: number;
+        highestMeasuredFrameIndex: number;
+        averageItemLength: number;
+    }) => {
+        const wait = new Promise(resolve => setTimeout(resolve, 500));
+        wait.then(() => {
+            if (flatListRef.current) {
+                flatListRef.current.scrollToIndex({
+                    index: info.index,
+                    animated: true
+                });
+            }
+        });
+    }
+
     return (
         <View style={styles.container}>
-            <FlatList
+            <AnimatedFlatList
                 ref={flatListRef}
                 data={data}
                 renderItem={renderItem}
@@ -88,15 +134,26 @@ const Carousel: React.FC<CarouselProps> = ({ data, onItemPress }) => {
                 snapToInterval={ITEM_WIDTH}
                 decelerationRate="fast"
                 contentContainerStyle={styles.flatListContent}
+                getItemLayout={getItemLayout}
+                onScrollToIndexFailed={onScrollToIndexFailed}
+                removeClippedSubviews={true}
+                initialNumToRender={1}
+                maxToRenderPerBatch={2}
+                windowSize={3}
             />
-            <View style={styles.indicatorContainer}>
-                {data.map((_, index) => (
-                    <View
-                        key={index}
-                        style={[styles.indicator, { backgroundColor: index === activeIndex ? "#FFD700" : "#FFFFFF" }]}
-                    />
-                ))}
-            </View>
+            {data.length > 1 && (
+                <View style={styles.indicatorContainer}>
+                    {data.map((_, index) => (
+                        <View
+                            key={`indicator-${index}`}
+                            style={[
+                                styles.indicator,
+                                { backgroundColor: index === activeIndex ? "#FFD700" : "#FFFFFF" }
+                            ]}
+                        />
+                    ))}
+                </View>
+            )}
         </View>
     )
 }

@@ -4,16 +4,10 @@ import type React from "react"
 import { View, Text as RNText, StyleSheet, FlatList, Image, TouchableOpacity } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "@/context/ThemeContext"
+import {Song} from "@/types/song";
 
 // Rename Text to avoid conflicts
 const Text = RNText
-
-interface Song {
-    id: string
-    title: string
-    artist: string
-    image: string
-}
 
 interface LatestSectionProps {
     title: string
@@ -28,7 +22,7 @@ const LatestSection: React.FC<LatestSectionProps> = ({ title, data, onSeeAllPres
     const renderItem = ({ item }: { item: Song }) => {
         return (
             <TouchableOpacity style={styles.songContainer} onPress={() => onSongPress(item)}>
-                <Image source={{ uri: item.image }} style={styles.songImage} />
+                <Image source={{ uri: item.coverImgUrl }} style={styles.songImage} />
                 <View style={styles.playOverlay}>
                     <Ionicons name="play" size={24} color="#FFFFFF" />
                 </View>

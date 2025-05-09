@@ -4,12 +4,7 @@ import type React from "react"
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import {useTheme} from "@/context/ThemeContext";
-
-interface Artist {
-    id: string
-    name: string
-    image: string
-}
+import {Artist} from "@/types/user";
 
 interface ArtistSectionProps {
     title: string
@@ -24,8 +19,8 @@ const ArtistSection: React.FC<ArtistSectionProps> = ({ title, data, onSeeAllPres
     const renderItem = ({ item }: { item: Artist }) => {
         return (
             <TouchableOpacity style={styles.artistContainer} onPress={() => onArtistPress(item)}>
-                <Image source={{ uri: item.image }} style={styles.artistImage} />
-                <Text style={[styles.artistName, { color: colors.text }]}>{item.name}</Text>
+                <Image source={{ uri: item.avatar }} style={styles.artistImage} />
+                <Text style={[styles.artistName, { color: colors.text }]}>{item.stageName}</Text>
             </TouchableOpacity>
         )
     }

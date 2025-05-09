@@ -1,4 +1,4 @@
-import {ScrollView, Text, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {ScrollView, Text, StyleSheet, TouchableOpacity, View, SafeAreaView, RefreshControl} from 'react-native';
 import {StatusBar} from "expo-status-bar";
 import {useTheme} from "@/context/ThemeContext";
 import {Ionicons} from "@expo/vector-icons";
@@ -6,83 +6,89 @@ import {usePlayerStore} from "@/store/playerStore";
 import ArtistSection from "@/components/home/ArtistSection";
 import LatestSection from "@/components/home/LatestSection";
 import Carousel from "@/components/home/Carousel";
-import MiniPlayer from "@/components/home/MiniPlayer";
-
-// Mock data for development
-const artistsData = [
-    {
-        id: "1",
-        name: "Guru Randhawa",
-        image: "https://img.tripi.vn/cdn-cgi/image/width=700,height=700/https://gcs.tripi.vn/public-tripi/tripi-feed/img/482553Xrb/anh-mo-ta.png",
-    },
-    {
-        id: "2",
-        name: "Justin Bieber",
-        image: "https://img.tripi.vn/cdn-cgi/image/width=700,height=700/https://gcs.tripi.vn/public-tripi/tripi-feed/img/482553Xrb/anh-mo-ta.png",
-    },
-    {
-        id: "3",
-        name: "Arijit Singh",
-        image: "https://img.tripi.vn/cdn-cgi/image/width=700,height=700/https://gcs.tripi.vn/public-tripi/tripi-feed/img/482553Xrb/anh-mo-ta.png",
-    },
-    {
-        id: "4",
-        name: "Taylor Swift",
-        image: "https://img.tripi.vn/cdn-cgi/image/width=700,height=700/https://gcs.tripi.vn/public-tripi/tripi-feed/img/482553Xrb/anh-mo-ta.png",
-    },
-]
-
-const carouselData = [
-    {
-        id: "1",
-        title: "Behri Duniya Mp3 Song",
-        subtitle: "21 Songs",
-        image: "https://via.placeholder.com/400x200",
-    },
-    {
-        id: "2",
-        title: "Top Hits 2023",
-        subtitle: "15 Songs",
-        image: "https://via.placeholder.com/400x200",
-    },
-    {
-        id: "3",
-        title: "Chill Vibes",
-        subtitle: "18 Songs",
-        image: "https://via.placeholder.com/400x200",
-    },
-]
-
-const latestData = [
-    {
-        id: "1",
-        title: "Song 1",
-        artist: "Artist 1",
-        image: "https://via.placeholder.com/150",
-    },
-    {
-        id: "2",
-        title: "Song 2",
-        artist: "Artist 2",
-        image: "https://via.placeholder.com/150",
-    },
-    {
-        id: "3",
-        title: "Song 3",
-        artist: "Artist 3",
-        image: "https://via.placeholder.com/150",
-    },
-    {
-        id: "4",
-        title: "Song 4",
-        artist: "Artist 4",
-        image: "https://via.placeholder.com/150",
-    },
-]
+import HotSongSection from "@/components/home/HotSongSection";
+import {
+    useGetPlaylistsQuery,
+    useGetRecommendSongQuery,
+    useGetSongListQuery,
+    useGetUserListQuery,
+    useLogSongMutation
+} from "@/store/api";
+import {Song} from "@/types/song";
+import {Artist} from "@/types/user";
+import {Playlist} from "@/types/playlist";
+import {useCallback, useState} from "react";
+import {useAuth} from "@/context/AuthContext";
 
 export default function HomeScreen() {
-    const { colors, toggleTheme, isDark } = useTheme()
-    const { setCurrentSong } = usePlayerStore()
+    const {colors, toggleTheme, isDark} = useTheme()
+    const {setCurrentSong} = usePlayerStore()
+    const [refreshing, setRefreshing] = useState(false)
+    const {isAuthenticated, userId} = useAuth()
+
+    const {
+        data: latestData,
+        refetch: refetchLatest,
+        isLoading: isLatestLoading
+    } = useGetSongListQuery({
+        sortBy: "CreatedDate",
+        sortDirection: "desc",
+        pageSize: 5,
+    });
+
+    const {
+        data: artistsData,
+        refetch: refetchArtists,
+        isLoading: isArtistsLoading
+    } = useGetUserListQuery({
+        sortBy: "CreatedDate",
+        sortDirection: "desc",
+        pageSize: 5,
+        isArtist: true,
+    });
+
+    const {
+        data: carouselData,
+        refetch: refetchCarousel,
+        isLoading: isCarouselLoading
+    } = useGetPlaylistsQuery({
+        sortBy: "CreatedDate",
+        sortDirection: "desc",
+        pageSize: 5,
+        isPublic: true,
+    });
+
+    const {
+        data: recommendData,
+        refetch: refetchRecommend,
+        isLoading: isRecommendLoading
+    } = useGetRecommendSongQuery(userId as string, {
+        skip: !isAuthenticated || !userId
+    });
+
+    const [logSong] = useLogSongMutation();
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            const refreshPromises = [
+                refetchLatest(),
+                refetchArtists(),
+                refetchCarousel()
+            ];
+
+            // Only refresh recommendations if user is logged in
+            if (isAuthenticated && userId) {
+                refreshPromises.push(refetchRecommend());
+            }
+
+            await Promise.all(refreshPromises);
+        } catch (error) {
+            console.error("Error refreshing data:", error);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [refetchLatest, refetchArtists, refetchCarousel, refetchRecommend, isAuthenticated, userId]);
 
     const handleArtistPress = (artist: any) => {
         console.log("Artist pressed:", artist)
@@ -99,63 +105,115 @@ export default function HomeScreen() {
         // Handle carousel item press
     }
 
-    const handleSongPress = (song: any) => {
+    const handleSongPress = (song: Song) => {
         console.log("Song pressed:", song)
         setCurrentSong({
             id: song.id,
             title: song.title,
             artist: song.artist,
-            cover: song.image,
-            audio: "https://example.com/audio.mp3", // This would be the actual audio URL
+            genre: song.genre,
+            duration: song.duration,
+            releaseDate: song.releaseDate,
+            coverImgUrl: song.coverImgUrl,
+            fileUrl: song.fileUrl,
+            streams: song.streams,
+            createdAt: song.createdAt,
+            albumTitle: song.albumTitle,
         })
+
+        if (isAuthenticated && userId)
+            logSong({
+                userId: userId,
+                songId: song.id
+            }).then(
+                () => console.log("Song logged successfully")
+            ).catch(
+                (error) => console.error("Error logging song:", error)
+            )
+
+        console.log("Current song after update:", usePlayerStore.getState().currentSong)
     }
-  return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-          <StatusBar style={isDark ? 'light' : 'dark'} />
 
-          <View style={styles.header}>
-              <TouchableOpacity style={styles.menuButton}>
-                  <Ionicons name="menu" size={28} color={colors.text} />
-              </TouchableOpacity>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>Home</Text>
-              <TouchableOpacity onPress={toggleTheme} style={styles.themeButton}>
-                  <Ionicons name={isDark ? "sunny" : "moon"} size={24} color={colors.text} />
-              </TouchableOpacity>
-          </View>
+    const isLoading = isLatestLoading || isArtistsLoading || isCarouselLoading ||
+        (isAuthenticated && userId && isRecommendLoading);
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-              <Carousel data={carouselData} onItemPress={handleCarouselItemPress} />
+    return (
+        <SafeAreaView style={[styles.container, {backgroundColor: colors.background}]}>
+            <StatusBar style={isDark ? 'light' : 'dark'}/>
 
-              <ArtistSection
-                  title="Artist"
-                  data={artistsData}
-                  onSeeAllPress={() => handleSeeAllPress("artists")}
-                  onArtistPress={handleArtistPress}
-              />
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.menuButton}>
+                    <Ionicons name="menu" size={28} color={colors.text}/>
+                </TouchableOpacity>
+                <Text style={[styles.headerTitle, {color: colors.text}]}>Home</Text>
+                <TouchableOpacity onPress={toggleTheme} style={styles.themeButton}>
+                    <Ionicons name={isDark ? "sunny" : "moon"} size={24} color={colors.text}/>
+                </TouchableOpacity>
+            </View>
 
-              <LatestSection
-                  title="Latest"
-                  data={latestData}
-                  onSeeAllPress={() => handleSeeAllPress("latest")}
-                  onSongPress={handleSongPress}
-              />
-          </ScrollView>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.primary]} // Android
+                        tintColor={colors.primary} // iOS
+                        title="Pull to refresh..." // iOS
+                        titleColor={colors.text} // iOS
+                    />
+                }
+            >
+                {carouselData?.data && (
+                    <Carousel
+                        data={carouselData.data as Playlist[]}
+                        onItemPress={handleCarouselItemPress}
+                    />
+                )}
 
-          <MiniPlayer />
-      </View>
-  );
+                {artistsData?.data && (
+                    <ArtistSection
+                        title="Artist"
+                        data={artistsData.data as Artist[]}
+                        onSeeAllPress={() => handleSeeAllPress("artists")}
+                        onArtistPress={handleArtistPress}
+                    />
+                )}
+
+                {latestData?.data && (
+                    <LatestSection
+                        title="Latest"
+                        data={latestData.data}
+                        onSeeAllPress={() => handleSeeAllPress("latest")}
+                        onSongPress={handleSongPress}
+                    />
+                )}
+
+                {isAuthenticated && userId && recommendData?.data && (
+                    <HotSongSection
+                        data={recommendData.data}
+                        title="Hot Songs"
+                        onSeeAllPress={() => handleSeeAllPress("hot songs")}
+                        onArtistPress={handleSongPress}
+                    />
+                )}
+            </ScrollView>
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        position: 'relative',
     },
     header: {
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 20,
-        paddingTop: 50,
-        paddingBottom: 10,
+        paddingTop: 32,
+        zIndex: 1,
     },
     menuButton: {
         padding: 5,
@@ -170,6 +228,6 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     scrollContent: {
-        paddingBottom: 100, // Space for mini player
+        paddingBottom: 80,
     },
 });
