@@ -1,0 +1,54 @@
+/* src/index.css */
+@import "tailwindcss";
+
+/* 1) Định nghĩa design tokens trong @theme, bắt buộc phải là custom properties
+      và đặt tên theo namespace. */
+@theme {
+  /* namespace color: tạo utilities bg-*, text-*, border-*, fill-*, etc */
+  --color-background:       0 0% 100%;
+  --color-foreground:       240 10% 3.9%;
+  --color-card:             0 0% 100%;
+  --color-card-foreground:  240 10% 3.9%;
+  --color-popover:          0 0% 100%;
+  --color-popover-foreground:240 10% 3.9%;
+  --color-primary:          262.1 83.3% 57.8%;
+  --color-primary-foreground:210 20% 98%;
+  --color-secondary:        240 4.8% 95.9%;
+  --color-secondary-foreground:240 5.9% 10%;
+  --color-muted:            240 4.8% 95.9%;
+  --color-muted-foreground: 240 3.8% 46.1%;
+  --color-accent:           240 4.8% 95.9%;
+  --color-accent-foreground:240 5.9% 10%;
+  --color-destructive:      0 84.2% 60.2%;
+  --color-destructive-foreground:0 0% 98%;
+  --color-border:           240 5.9% 90%;    /* ← đây */
+  --color-input:            240 5.9% 90%;
+  --color-ring:             262.1 83.3% 57.8%;
+
+  /* namespace radius: tạo utilities rounded-* */
+  --radius-default:         0.5rem;
+
+  /* Nếu bạn có keyframes, cũng được phép */
+  /* @keyframes my-animation { … } */
+}
+
+/* 2) Custom base styles */
+@layer base {
+  /* bây giờ border-border sẽ tồn tại */
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* 3) Components */
+@layer components {
+  .sidebar-item {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:text-primary;
+  }
+  .sidebar-item.active {
+    @apply bg-secondary text-primary;
+  }
+}
