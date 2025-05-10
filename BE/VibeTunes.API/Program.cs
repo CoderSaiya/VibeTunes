@@ -168,6 +168,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseMiddleware<NotFoundMiddleware>();
+app.UseMiddleware<CheckRoleMiddleware>();
+
 app.MapHub<NotificationHub>("/api/notificationHub");
 app.MapHub<MusicHub>("/api/musicHub");
 
