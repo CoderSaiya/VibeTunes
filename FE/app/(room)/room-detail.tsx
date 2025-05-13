@@ -46,13 +46,19 @@ const RoomDetailScreen: React.FC = () => {
     const [isOwner, setIsOwner] = useState(false)
     const { userId: currentUserId } = useAuth()
     const [fadeAnim] = useState(new Animated.Value(0))
-    const [songUrl, setSongUrl] = useState("")
     const [showSongList, setShowSongList] = useState(false)
     const [songs, setSongs] = useState<Song[]>([])
     const [isLoadingSongs, setIsLoadingSongs] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
 
     const slideAnim = useRef(new Animated.Value(height)).current
+
+    // Query for songs data
+    const { data: songResponse, isLoading: songsIsLoading } = useGetSongListQuery({
+        sortBy: "CreatedDate",
+        sortDirection: "desc",
+        pageSize: 100,
+    })
 
     useEffect(() => {
         // Fade in animation
@@ -101,27 +107,16 @@ const RoomDetailScreen: React.FC = () => {
         }
     }, [currentRoom, router])
 
-    const handleLeaveRoom = async () => {
-        try {
-            await leaveRoom()
-            router.replace("/(tabs)/room")
-        } catch (error) {
-            console.error("Error leaving room:", error)
-            Alert.alert("Error", "Failed to leave room. Please try again.")
+    useEffect(() => {
+        // Update songs when songResponse changes
+        if (songResponse?.data) {
+            setSongs(songResponse.data);
         }
-    }
+    }, [songResponse]);
 
     useEffect(() => {
         if (showSongList) {
-            const {data: songResponse} = useGetSongListQuery({
-                sortBy: "CreatedDate",
-                sortDirection: "desc",
-                pageSize: 100,
-            })
-
-            const data = songResponse?.data || [];
-
-            setSongs(data);
+            setIsLoadingSongs(songsIsLoading);
 
             // Slide up animation
             Animated.spring(slideAnim, {
@@ -139,7 +134,17 @@ const RoomDetailScreen: React.FC = () => {
                 friction: 12
             }).start()
         }
-    }, [showSongList])
+    }, [showSongList, songsIsLoading])
+
+    const handleLeaveRoom = async () => {
+        try {
+            await leaveRoom()
+            router.replace("/(tabs)/room")
+        } catch (error) {
+            console.error("Error leaving room:", error)
+            Alert.alert("Error", "Failed to leave room. Please try again.")
+        }
+    }
 
     const handlePlayPause = async () => {
         if (!currentRoom) return
@@ -190,33 +195,35 @@ const RoomDetailScreen: React.FC = () => {
         }
     }
 
-    const handleSetSongByUrl = async () => {
-        if (!currentRoom || !songUrl.trim()) return
+    const handleSelectSong = async (song: Song) => {
+        if (!currentRoom) return
 
         try {
-            // Create a temporary song object from the URL
-            // You might want to fetch metadata from the URL in a real implementation
-            const newSong: Song = {
-                id: Date.now().toString(), // Generate a temporary ID
-                title: "Song from URL",
-                artist: "Unknown Artist",
-                coverImgUrl: "https://via.placeholder.com/200",
-                url: songUrl.trim(),
-                duration: "00:00",
-            }
-
             // Set as current song using the player store
-            setCurrentSong(newSong)
+            setCurrentSong(song)
 
             // Notify other users through SignalR
-            await updatePlayback("Playing", newSong.id, 0)
+            await updatePlayback("Playing", song.id, 0)
 
-            setSongUrl("") // Clear the input after setting
+            // Hide song list
+            setShowSongList(false)
         } catch (error) {
-            console.error("Error setting song by URL:", error)
-            Alert.alert("Error", "Failed to set song. Please check the URL and try again.")
+            console.error("Error selecting song:", error)
+            Alert.alert("Error", "Failed to set song. Please try again.")
         }
     }
+
+    const toggleSongList = () => {
+        setShowSongList(!showSongList)
+        if (!showSongList) {
+            setSearchQuery("")
+        }
+    }
+
+    const filteredSongs = songs.filter(song =>
+        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
     const renderListenerItem = ({ item, index }: { item: any; index: number }) => (
         <Animated.View
@@ -244,6 +251,23 @@ const RoomDetailScreen: React.FC = () => {
             </View>
             <Text style={[styles.listenerName, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
         </Animated.View>
+    )
+
+    const renderSongItem = ({ item }: { item: Song }) => (
+        <TouchableOpacity
+            style={[styles.songItem, { backgroundColor: colors.card }]}
+            onPress={() => handleSelectSong(item)}
+        >
+            <Image
+                source={{ uri: item.coverImgUrl || "https://via.placeholder.com/60"}}
+                style={styles.songCover}
+            />
+            <View style={styles.songInfo}>
+                <Text style={[styles.songTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
+                <Text style={[styles.songArtist, { color: colors.text + '80' }]} numberOfLines={1}>{item.artist}</Text>
+            </View>
+            <Ionicons name="play-circle-outline" size={28} color={colors.primary} />
+        </TouchableOpacity>
     )
 
     if (!currentRoom) {
@@ -367,17 +391,17 @@ const RoomDetailScreen: React.FC = () => {
                             <Ionicons name="musical-notes" size={64} color={colors.primary} />
                             <Text style={[styles.noSongText, { color: colors.text }]}>No song playing</Text>
                             <Text style={[styles.noSongSubtext, { color: colors.text + '80' }]}>
-                                {isOwner ? "Set a song using the URL input below" : "Waiting for host to set a song"}
+                                {isOwner ? "Select a song from the library below" : "Waiting for host to set a song"}
                             </Text>
                         </View>
                     )}
                 </Animated.View>
 
-                {/* Set Song by URL Section (Only for room owner) */}
+                {/* Choose Song Button (Only for room owner) */}
                 {isOwner && (
                     <Animated.View
                         style={[
-                            styles.setSongContainer,
+                            styles.chooseSongContainer,
                             {
                                 backgroundColor: colors.card,
                                 opacity: fadeAnim,
@@ -388,33 +412,15 @@ const RoomDetailScreen: React.FC = () => {
                             }
                         ]}
                     >
-                        <Text style={[styles.setSongTitle, { color: colors.text }]}>Set Song by URL</Text>
-                        <View style={styles.urlInputContainer}>
-                            <TextInput
-                                style={[styles.urlInput, {
-                                    backgroundColor: colors.background,
-                                    color: colors.text,
-                                    borderColor: colors.border
-                                }]}
-                                placeholder="Enter song URL..."
-                                placeholderTextColor={colors.text + '80'}
-                                value={songUrl}
-                                onChangeText={setSongUrl}
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
-                            <TouchableOpacity
-                                style={[styles.setSongButton, {
-                                    backgroundColor: colors.primary,
-                                    opacity: songUrl.trim() ? 1 : 0.6
-                                }]}
-                                onPress={handleSetSongByUrl}
-                                disabled={!songUrl.trim()}
-                            >
-                                <Ionicons name="musical-note" size={18} color="#FFFFFF" />
-                                <Text style={styles.setSongButtonText}>Set</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                            style={[styles.chooseSongButton, { backgroundColor: colors.primary }]}
+                            onPress={toggleSongList}
+                        >
+                            <Ionicons name="musical-notes" size={20} color="#FFFFFF" />
+                            <Text style={styles.chooseSongButtonText}>
+                                {showSongList ? "Close Song List" : "Choose a Song"}
+                            </Text>
+                        </TouchableOpacity>
                     </Animated.View>
                 )}
 
@@ -435,6 +441,66 @@ const RoomDetailScreen: React.FC = () => {
                     contentContainerStyle={styles.listenersContainer}
                 />
             </View>
+
+            {/* Song List Modal */}
+            <Animated.View
+                style={[
+                    styles.songListContainer,
+                    {
+                        backgroundColor: colors.background,
+                        transform: [{ translateY: slideAnim }]
+                    }
+                ]}
+            >
+                <View style={styles.songListHeader}>
+                    <Text style={[styles.songListTitle, { color: colors.text }]}>Select a Song</Text>
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => setShowSongList(false)}
+                    >
+                        <Ionicons name="close" size={24} color={colors.text} />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
+                    <Ionicons name="search" size={20} color={colors.text + '80'} />
+                    <TextInput
+                        style={[styles.searchInput, { color: colors.text }]}
+                        placeholder="Search songs..."
+                        placeholderTextColor={colors.text + '60'}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                    />
+                    {searchQuery ? (
+                        <TouchableOpacity onPress={() => setSearchQuery("")}>
+                            <Ionicons name="close-circle" size={20} color={colors.text + '80'} />
+                        </TouchableOpacity>
+                    ) : null}
+                </View>
+
+                {isLoadingSongs ? (
+                    <View style={styles.loadingContainer}>
+                        <Text style={[styles.loadingText, { color: colors.text }]}>Loading songs...</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={filteredSongs}
+                        renderItem={renderSongItem}
+                        keyExtractor={item => item.id}
+                        style={styles.songList}
+                        contentContainerStyle={styles.songListContent}
+                        showsVerticalScrollIndicator={false}
+                        ListEmptyComponent={
+                            <View style={styles.emptyListContainer}>
+                                <Ionicons name="musical-note-outline" size={40} color={colors.text + '40'} />
+                                <Text style={[styles.emptyListText, { color: colors.text + '80' }]}>
+                                    {searchQuery ? "No songs match your search" : "No songs available"}
+                                </Text>
+                            </View>
+                        }
+                    />
+                )}
+            </Animated.View>
         </SafeAreaView>
     )
 }
@@ -582,7 +648,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         paddingHorizontal: 20,
     },
-    setSongContainer: {
+    chooseSongContainer: {
         borderRadius: 16,
         padding: 16,
         marginBottom: 24,
@@ -592,37 +658,18 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
     },
-    setSongTitle: {
-        fontSize: 16,
-        fontWeight: "600",
-        marginBottom: 12,
-    },
-    urlInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    urlInput: {
-        flex: 1,
-        height: 46,
+    chooseSongButton: {
+        height: 48,
         borderRadius: 8,
-        paddingHorizontal: 12,
-        borderWidth: 1,
-        fontSize: 15,
-    },
-    setSongButton: {
-        height: 46,
-        borderRadius: 8,
-        paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
+        gap: 8,
     },
-    setSongButtonText: {
+    chooseSongButtonText: {
         color: '#FFFFFF',
         fontWeight: '600',
-        fontSize: 15,
+        fontSize: 16,
     },
     sectionHeader: {
         flexDirection: "row",
@@ -673,6 +720,93 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 2,
         borderColor: 'white',
+    },
+    // Song List Modal Styles
+    songListContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: height * 0.7,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 16,
+        elevation: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+    },
+    songListHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    songListTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    closeButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        height: 46,
+        borderRadius: 8,
+        marginBottom: 16,
+    },
+    searchInput: {
+        flex: 1,
+        height: '100%',
+        marginLeft: 8,
+        fontSize: 16,
+    },
+    songList: {
+        flex: 1,
+    },
+    songListContent: {
+        paddingBottom: 20,
+    },
+    songItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        marginBottom: 8,
+        borderRadius: 12,
+    },
+    songCover: {
+        width: 60,
+        height: 60,
+        borderRadius: 8,
+    },
+    songInfo: {
+        flex: 1,
+        marginLeft: 12,
+        marginRight: 8,
+    },
+    songTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    songArtist: {
+        fontSize: 14,
+    },
+    emptyListContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+    },
+    emptyListText: {
+        fontSize: 16,
+        marginTop: 12,
     },
 })
 
